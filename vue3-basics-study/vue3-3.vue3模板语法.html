@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- 1.cdn引入全局构建版本  -->
+  <!-- <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script> -->
+  <!-- 1.cdn引入 ES 模块构建版本  -->
+  <script src="https://unpkg.com/vue@3/dist/vue.esm-browser.js"></script>
+  <!-- 1.本地引入全局构建版本  -->
+  <!-- <script src="./vue.global.js"></script> -->
+  <!-- 1.本地引入ES 模块构建版本  -->
+  <!-- <script src="./vue.esm-browser.js"></script> -->
+  <!-- 启用映射表告诉浏览器如何定位到导入的 vue -->
+  <script type="importmap">
+    {
+      "imports": {
+        "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
+      }
+    }
+  </script>
+
+  <title>vue3-2.vue3的基本使用</title>
+</head>
+<body>
+    <!-- 3.将来vue的实例会控制这个元素中的所有内容 -->
+    <div id="app">
+      
+    </div>
+<script type="module">
+  // 2.使用 ES模块版本 引入 createApp创建 Vue实例
+  import { createApp } from "vue"
+  const app = createApp({
+    // setup选项
+    setup() {
+
+      return {}
+    },
+
+
+  })
+  // 3.挂载
+  app.mount('#app')
+</script>
+</body>
+</html>
