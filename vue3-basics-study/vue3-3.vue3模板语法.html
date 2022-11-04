@@ -4,15 +4,8 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- 1.cdn引入全局构建版本  -->
-  <!-- <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script> -->
   <!-- 1.cdn引入 ES 模块构建版本  -->
   <script src="https://unpkg.com/vue@3/dist/vue.esm-browser.js"></script>
-  <!-- 1.本地引入全局构建版本  -->
-  <!-- <script src="./vue.global.js"></script> -->
-  <!-- 1.本地引入ES 模块构建版本  -->
-  <!-- <script src="./vue.esm-browser.js"></script> -->
-  <!-- 启用映射表告诉浏览器如何定位到导入的 vue -->
   <script type="importmap">
     {
       "imports": {
@@ -20,16 +13,220 @@
       }
     }
   </script>
-
-  <title>vue3-2.vue3的基本使用</title>
+  <title>vue3-2.vue3模板语法</title>
 </head>
 <body>
-    <!-- 3.将来vue的实例会控制这个元素中的所有内容 -->
     <div id="app">
+      <h3>1. 模板语法概述</h3>
+      <div>
+          Vue.js 使用了基于 HTML 的模板语法,允许开发者声明式地将 DOM 绑定至底层 Vue 实例的数据。    
+          即模板语法就是vue提供的一种可以动态的生成html页面的语法规范,它会在html页面中嵌套一些js的语法代码。
+          在底层机制中，Vue 会将模板编译成高度优化的 JavaScript 代码。但是在经过一系列操作之后浏览器还是能解析的,其实就是vue的语法规范。
+          和vue2一样还是主要包括
+            插值表达式(mustache)
+            指令(directives)
+          而且基本没变化。
+      </div>
+      <h3>2. 插值表达式(mustache)</h3>
+      <div>
+          插值表达式(mustache)：使用双大括号{{
+              文本/data中的变量/计算属性/简单的js表达式等 | 过滤器1 | 过滤器2 | 过滤器3
+          }},表示,最终解释为纯文本，而不是 HTML。。一般放在标签的文本内容位置上。
+          它会被替换为相应组件实例上对应的属性的值,同时对应属性发生了改变,插值处的内容也会更新。
+          注意：在插值表达式末尾添加 管道符号 “|” 可以对数据进行过滤, 过滤器规则是在vue实例选项 filters中定义的。
+          过滤器可以串联也可以接收参数。
+      </div>
+      <h3>3. 指令(Directives)</h3>
+      <div>
+          <h4>1.概述</h4>
+          <div>
+              作为vue模板语法组成的另一个重要部分,vue指令可分为内置指令和自定义指令两种。
+              内置指令:由vue原生提供的带有 v- 前缀的特殊 attribute(属性/特性)，它们将为渲染的 DOM 应用特殊的响应式行为。
+              用法:内置指令相当vue提供给html元素/组件的属性跟class,id等属性类似,写到html元素或vue组件的开始标签中去。<br>
+              作用是:当指令的属性值改变时,将其产生的连带影响,响应式地作用于DOM。<br>
+              一般指令都能等于一个js值或者js表达式,还有一些还可以接收一个参数(常见如HTML特性)在指令名称之后以冒号表示,属性和特性可以理解为一个东西attribute。
+                  v-指令名="值"
+                  v-指令名="js表达式"
+                  v-指令名:参数名(常见如html的属性class)="值" 这样这个参数(常见如html的属性class,src,id等这些原有的或者自己定义的)就变成了动态绑定了,值改变了它也跟着改变。<br>
+                  v-指令名:[参数名(常见如html的属性class)]="值" 动态属性值
+              这里的"值"就是相应组件实例上对应的属性的值<br>
+              此外指令还可以添加修饰符，修饰符(modifier) 是以半角句号 . 指明的特殊后缀,用于指出指令需要以何种特殊方式执行。
+              例如 .prevent 修饰符会告知 v-on 指令对触发的事件调用 event.preventDefault()。<br>
+              所以完整的指令语法如下：
+              v-指令名:参数名.修饰符名 = "值"
+              <br>
+              <img src="./images//directive.69c37117.png" alt="">
+
+          </div>
+          <h4>2.内置指令</h4>
+          <div>
+              <h5>1.常见内置指令</h5>
+              <p>
+                  1.v-once 仅渲染元素和组件一次，并跳过之后的更新。
+                  2.v-cloak 用于隐藏尚未完成编译的 DOM 模板。配合样式[v-cloak] { display: none }解决插值表达式闪烁问题。
+                  3.v-html 更新元素的 innerHTML会解析其中的 HTML标签。
+                  4.v-text 更新元素的文本内容不会解析html标签,它是通过设置元素的 textContent 属性来工作，因此它将覆盖元素中所有现有的内容。
+                  5.v-pre  所有 Vue 模板语法都会被保留并按原样渲染。
+              </p>
+              <h5>2.绑定Attribute(属性/特性)指令v-bind</h5>
+              <p>
+                  前面已经知道有一些指令是能够接收一个“参数”,在指令名称之后以冒号表示。
+                  而v-bind 指令就是用于响应式地更新 HTML 属性的指令,即它可以把HTML标签的某个属性(id,class,style,title,url等HTML标签属性)从文本变成动态的变量。<br>
+                  参数告诉v-bind指令我的值是和谁(哪个属性)绑定了,从而实现动态更新html元素的特性。
+                  一句话:v-bind用于响应式地更新HTML属性。<br>
+                  因为 v-bind 非常常用,所以提供了语法糖(即缩写) :<br>
+
+                  1.绑定class属性:<br>
+                  普通字符串 :class="类名变量" 这里的类名变量是组件实例中声明的响应式状态。<br>
+                      v-bind:class="变量类名"<br>
+                  对象语法  :class="{类名1:数据变量名1,类名2:数据变量名2,...}"<br>
+                      v-bind:class="{类名1:组件实例中的数据名1,类名2:组件实例中的数据名2}" 这时只要组件实例中对应的数据变量名值为true就会把对应的类名添加上。<br>
+                  数组语法:比较少用 :class="['类名1',类名2,...]" <br>
+                      v-bind:class="['类名1','类名2']" 加了单引号就是普通的字符串,不加就是组件实例中的属性。<br>
       
+                  2.绑定内联style属性:注意属性名的编写使用驼峰或者短横线-分隔的写法如:font-size --》 fontSize 'font-size'<br>
+                  注意:变量名不加引号就会当成变量的。
+                  对象语法: v-bind:style="{css属性名1:data中的变量名1,css属性名2:data中的变量名2}"<br>
+                  数组语法:比较少用 :style="[变量1,类名2]" 加了单引号就是普通的字符串。
+                  注意:Vue js 会自动给特殊 css 加前缀, 比如 transform等。
+              </p>
+              <h5>3.事件绑定指令v-on</h5>
+              <p>
+                  v-on 指令用于监听普通元素的原生DOM事件(dom事件名作为v-on指令的参数),绑定的事件回调函数在组件中定义。
+                  它也比较常用所以也提供了语法糖(缩写) @
+                  参数问题:
+                      如果事件回调函数没有参数,()可以省略。
+                      如果有一个参数,但是调用时也没写,会传入浏览器生成的event事件对象,使用$event表示。
+                      如果需要自定义参数同时也需要这个event对象就要手动传入。
+                      v-on:dom事件名="callback"
+                      v-on:click="doSomething(a,$event)"
+              </p>
+              <h5>4.条件渲染指令</h5>
+              <p>
+                  条件渲染:即根据vue条件指令的表达式的值来渲染(显示)一块内容(某个DOM元素) 这块内容只会在指令的表达式返回真值时才被渲染。
+                  v-if="变量1"
+                   v-else-if="变量2"
+                    else-if
+                  注意:v-else必须紧跟在v-if的后面否则无法被识别,在template元素上使用则渲染整个组件。
+                    <br>
+      
+                  v-show也是根据条件来改变元素的可见性,不同的是带有 v-show 的元素始终会被渲染并保留在 DOM 中。<br>
+                  它只是简单地切换元素内联的 CSS 属性 display:none/block。视觉上的不可见<br>
+                  注意,v-show 不支持 template 元素,也不支持 v-else。<br>
+      
+                  两种条件渲染的区别:
+                      v-if是真正的条件渲染,会从内存中移除, 有更高的切换开销所以条件很少改变时使用它。
+                      也是惰性的,只有第一次条件为真时才渲染。
+                      当 v-if 与 v-for 一起使用时,v-for 具有比 v-if 更高的优先级。不建议同时使用这俩个!
+                      v-show只是简单地切换元素的样式,还存在内存中,有更高的初始渲染开销所以频繁切换时使用它。
+              </p>
+              <h5>5.列表渲染指令</h5>
+              <p>
+                  列表渲染:当有一组数据需要渲染时就可以使用v-for把数据循环遍历出来渲染。
+                  这一组数据可以是：数组、对象、整数值等，然后在 v-for 块中就可以完整地访问父作用域内的属性和变量。
+                  <br>
+                  遍历数组语法:<br>
+                      v-for 指令需要使用特殊语法 alias in expression 为正在迭代的元素提供一个别名 
+                      如：v-for="(item,index) in items" :key="keyvalue" 形式的特殊语法,可以用 of 替代 in 作为分隔符,因为它更接近 JavaScript 迭代器的语法:<br>
+                  其中 items 是源数据数组,而 item 则是被迭代的每一个数组元素的别名(即原数组对象中的每一个元素)。<br>
+                  注意:现在vue3.0必须加上索引值,item和index都只是一个命名习惯而已就是一个函数的形参那样,可以随意命名的。
+                  注意:0必须加上索引值keyvalue的值要唯一,且不能是引用类型的值。<br>
+                  如果数组里的元素是一个对象就可以通过 item.对象属性名 的方式取得对应的属性值。
+                  <br>
+                  遍历对象语法:<br>
+                      v-for="(value,name,index) in object" :key="keyvalue"  
+                  value-属性值,name-属性名,index-序号,也是形参格式不固定命名的。<br>
+                  value都是第一个,因为属性值比较重要。如果对象里的元素还是一个对象则可以通过 item.对象属性名.指定属性名 取得嵌套的属性值。
+                  <br>
+                  对于 :key="keyvalue" 主要是为了更加高效地更新虚拟DOM并确保和要渲染的内容一一对应。
+                  <br>
+                  遍历整数值:<br>
+                  v-for 还可以直接接受一个整数值。在这种用例中，会将该模板基于 1...n 的取值范围重复多次。
+                  <br>
+                  和v-if类似,v-for也可以用在内置标签template上来渲染一个包含多个元素的块。或者组件上渲染多个组件。
+                  <br>
+                  需要注意的是无论vue2还是vue3使用了条件渲染或者列表渲染都应该加上 key属性防止重用,特别是一些输入框。
+                  这是因为 Vue 默认按照“就地更新”的策略来更新通过 v-for 渲染的元素列表。当数据项的顺序改变时，Vue 不会随之移动 DOM 元素的顺序，而是就地更新每个元素，确保它们在原本指定的索引位置上渲染。
+
+              </p>
+              <h5>6.表单输入绑定指令</h5>
+              <p>
+                  使用v-model 指令在表单元素 input、textarea 及 select 元素上创建双向数据绑定(作为标签属性写)。
+                  即用户修改了输入框的值会自动更新到前端页面视图上。<br>
+                  注意:v-model 会忽略所有表单元素的 value、checked、selected 特性的初始值而总是将 Vue 组件实例中声明的数据作为数据来源。<br>
+                  值绑定:即使用v-bind动态绑定表单的value值绑定到 Vue 组件实例中的一个动态属性上。v-bind:value="变量"<br>
+                  修饰符:和事件监听的修饰符类似,v-model也有修饰符。默认情况下,v-model 在每次 input 事件触发后将输入框的值与数据进行同步,即数据改变组件实例中的数据也会改变。
+                  通过修饰符可以实现控制数据同步的时机<br>
+                  v-model.lazy;lazy修饰符,转变为在“change”时而非“input”时更新。也就是失去输入框的焦点或者按回车时触发。
+                  v-model.number;自动将用户的输入值转为数值类型,可以给 v-model 添加 number 修饰符:这就是输入框类型为number。
+                  v-model.trim;自动过滤用户输入的首尾空白字符,常用可以给 v-model 添加 trim 修饰符。
+                  本质上:v-model是一个语法糖,双向数据绑定的本质是 v-bind默认动态绑定表单的value属性,v-on默认监听当前表单元素的input事件。
+                  即:
+                      text 和 textarea 会绑定 value property 并侦听 input 事件；
+                      checkbox 和 radio 会绑定 checked property 并侦听 change 事件；
+                      select 会绑定 value property 并侦听 change 事件。
+      
+                  普通文本输入框直接绑定一个值就行,但是实际开发中value值是动态绑定的,
+      
+                  单选按钮只有一个选项时直接使用v-bind绑定一个布尔值即可,如果是组合使用实现互斥效果的需要和value属性配合。
+      
+                  复选框:单个复选框v-model绑定一个布尔值即可,多个组合使用时和value属性一起使用且绑定一个数组。
+                  value的值又在数组中就会选中,勾选时value值也会自动push到数组中。
+      
+                  下拉列表:在select元素上绑定v-model,备选项option中如果存在value属性就优先匹配value的值。
+                  如果不存在就匹配option的text文本内容。多选时要给select元素添加 multiple 属性,其它跟单选是类似的。
+                  注意在实际开发中 option备选项是通过v-for循环出来的,而value和text文本信息都通过v-bind动态绑定的。        
+
+                  除了这三种表单控件元素外，这个指令还可以用在组件上。
+              </p>
+          </div>
+          <h4>3.自定义指令</h4>
+          <div>
+              自定义指令:由开发人员调用内部方法自己定义的指令,见vue进阶语法学习。
+          </div>
+          <h4>4.修饰符</h4>
+          <div>
+              在事件处理程序中经常要阻止冒泡或者阻止默认行为这样的操作,在vue中也为 v-on 和v-model提供了相关的修饰符。
+              <h5>1.事件修饰符</h5>
+              <p>
+                  用来处理 DOM 事件细节的修饰符。修饰符是可以串联使用的  
+                  .stop,调用 event.stopPropagation(),阻止单击事件继续传播。
+                  .prevent,调用 event.preventDefault(),提交事件不再重载页面取消默认行为。
+                  .capture,添加事件监听器时使用事件捕获模式
+                  .self,只当在 event.target 是当前元素自身时触发处理函数
+                  .once,只触发一次事件
+                  .passive,对应 addEventListener 中的 passive 选项提供的修饰符,能够提升移动端的性能。
+                  .native 修饰符,监听DOM原生事件
+
+              </p>
+              <h5>2.按键修饰符</h5>
+              <p>
+                  在监听键盘事件时,我们经常需要检查详细的按键。Vue 允许为 v-on 在监听键盘事件时添加按键修饰符。
+                  常见的:回车键,tab键,空格键,ctrl,alt,shift,上下左右中五键,windows键 共计12个。
+                  .enter
+                  .tab
+                  .space
+                  .up
+                  .down
+                  .left
+                  .right
+                  .middle
+                  .ctrl
+                  .alt
+                  .shift
+                  .meta
+
+              </p>
+              <h5>3.v-model的修饰符</h5>
+              <p>
+                  .lazy,在默认情况下,v-model 在每次 input 事件触发后将输入框的值与数据进行同步添加 lazy 修饰符,从而转为在 change 事件_之后_进行同步。
+                  .number,如果想自动将用户的输入值转为数值类型,可以给 v-model 添加 number 修饰符。
+                  .trim,如果要自动过滤用户输入的首尾空白字符,可以给 v-model 添加 trim 修饰符。
+              </p>
+          </div>
+      </div>
     </div>
 <script type="module">
-  // 2.使用 ES模块版本 引入 createApp创建 Vue实例
   import { createApp } from "vue"
   const app = createApp({
     // setup选项
