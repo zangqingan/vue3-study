@@ -193,7 +193,7 @@ errorCaptured	             onErrorCaptured	    当捕获一个来自子孙组件
 
 ## 2.3 响应式数据的区别
 Vue 2 是使用了 Object.defineProperty API 的 getter/setter 来实现数据的响应性。
-而Vue 3 是使用了 Proxy API 的 getter/setter 来实现数据的响应性。
+而Vue 3 是使用了 对象代理Proxy API 的 getter/setter 来实现数据的响应性。
 
 
 
