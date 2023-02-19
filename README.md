@@ -194,6 +194,460 @@ errorCaptured	             onErrorCaptured	    当捕获一个来自子孙组件
 ## 2.3 响应式数据的区别
 Vue 2 是使用了 Object.defineProperty API 的 getter/setter 来实现数据的响应性。
 而Vue 3 是使用了 对象代理Proxy API 的 getter/setter 来实现数据的响应性。
+那么为什么 Vue 3 要舍弃 Object.defineProperty ，换成 Proxy 呢？主要原因在于 Object.defineProperty 有以下的不足：
+    无法侦听数组下标的变化，通过 arr[i] = newValue 这样的操作无法实时响应
+    无法侦听数组长度的变化，例如通过 arr.length = 10 去修改数组长度，无法响应
+    只能侦听对象的属性，对于整个对象需要遍历，特别是多级对象更是要通过嵌套来深度侦听
+    使用 Object.assign() 等方法给对象添加新属性时，也不会触发更新
+实际开发就是，vue2中在data选项中声明的变量就是响应式变量
+而vue3则是需要使用新的响应式API声明
+
+### 2.3.1 响应式 API 之 ref
+ref 是最常用的一个响应式 API，它可以用来定义所有类型的数据，包括 Node 节点和组件。
+ref API 是一个函数，通过接受一个泛型入参，返回一个响应式对象，所有的值都通过 .value 属性获取或重新赋值。
+但是在模板中不用 .value可以直接使用。ref()本质是对reactive方法的封装。
+如：
+// 字符串，显式指定 `msg.value` 是 `string` 类型
+const msg = ref<string>('Hello World!')
+
+// 数值
+const count = ref<number>(1)
+
+// 布尔值
+const isVip = ref<boolean>(false)
+
+// 先声明对象的格式
+interface Member {
+  id: number
+  name: string
+}
+
+// 在定义对象时指定该类型
+const userInfo = ref<Member>({
+  id: 1,
+  name: 'Tom',
+})
+
+// 数值数组
+const uids = ref<number[]>([1, 2, 3])
+
+// 字符串数组
+const names = ref<string[]>(['Tom', 'Petter', 'Andy'])
+
+// 声明对象的格式
+interface Member {
+  id: number
+  name: string
+}
+
+// 定义一个对象数组
+const memberList = ref<Member[]>([
+  {
+    id: 1,
+    name: 'Tom',
+  },
+  {
+    id: 2,
+    name: 'Petter',
+  },
+])
+
+除了可以定义数据，ref 也有熟悉的用途，就是用来挂载节点，也可以挂在子组件上，也就是对应在 Vue 2 时常用的 this.$refs.xxx 获取 DOM 元素信息的作用。
+
+模板部分依然是熟悉的用法，在要引用的 DOM 上添加一个 ref 属性：
+
+<template>
+  <!-- 给 DOM 元素添加 `ref` 属性 -->
+  <p ref="msg">请留意该节点，有一个 ref 属性</p>
+
+  <!-- 子组件也是同样的方式添加 -->
+  <Child ref="child" />
+</template>
+
+在 <script /> 部分有三个最基本的注意事项：
+
+    在 <template /> 代码里添加的 ref 属性的值，是对应 <script /> 里使用 ref API 声明的变量的名称；
+
+    请保证视图渲染完毕后再执行 DOM 或组件的相关操作（需要放到生命周期的 onMounted 或者 nextTick 函数里，这一点在 Vue 2 也是一样）；这个是至关重要的。
+
+    该 Ref 变量必须 return 出去才可以给到 <template /> 使用，这一点是 Vue 3 生命周期的硬性要求，子组件的数据和方法如果要给父组件操作，也要 return 出来才可以。当然在vue3.2之后使用setup语法糖是不需要使用的。
+
+
+平时对于普通变量的值，读取的时候都是直接调用其变量名即可。
+
+// 读取一个字符串
+const msg: string = 'Hello World!'
+console.log(msg)
+
+// 读取一个数组
+const uids: number[] = [1, 2, 3]
+console.log(uids[1])
+
+
+对于数组类型ref操作不会丢失响应式也就是说在日常业务中，像在对接服务端 API 的接口数据时，可以自由的使用数组的遍历方法如： forEach、map、filter 等方法操作 Ref 数组，或者直接重置它，而不必担心数据失去响应性。
+
+const data = ref<string[]>([])
+// 提取接口的数据
+data.value = api.data.map((item: any) => item.text)
+
+// 重置数组
+data.value = []
+
+### 2.3.2 响应式 API 之 reactive 
+reactive 是继 ref 之后最常用的一个响应式 API 了，相对于 ref ，它的局限性在于只适合对象、数组。
+记住只用来声明对象和数组这很关键。
+
+// 声明对象的类型
+interface Member {
+  id: number
+  name: string
+}
+
+// 定义一个对象
+const userInfo: Member = reactive({
+  id: 1,
+  name: 'Tom',
+})
+
+const uids: number[] = reactive([1, 2, 3])
+
+// 再定义一个为对象数组
+const userList: Member[] = reactive([
+  {
+    id: 1,
+    name: 'Tom',
+  },
+  {
+    id: 2,
+    name: 'Petter',
+  },
+  {
+    id: 3,
+    name: 'Andy',
+  },
+])
+
+// 读取用户名
+console.log(userInfo.name)
+
+// 修改用户名
+userInfo.name = 'Petter'
+
+可以看出使用ts时和ref声明对象，数组的方法是不太一样的，ref是接受入参，而reactive是写在变量一侧。
+使用时也不用像ref一样 .value，另一个不同是对数组重置时 直接 赋值空数组reactive会丢失响应式。这时应该通过重置数组的 length 长度来实现数据的重置。
+同时不要直接对reactive 变量进行解构，因为解构后得到的变量会失去响应性。
+
+
+### 2.3.3 响应式 API 之 toRef 与 toRefs 
+为了方便开发者使用， Vue 3 还推出了两个与之相关的 API ： toRef 和 toRefs ，都是用于 reactive 向 ref 转换。
+这两个 API 在拼写上非常接近，顾名思义，一个是只转换一个字段，一个是转换所有字段，转换后将得到新的变量，并且新变量和原来的变量可以保持同步更新。也就是保持响应式。
+toRef(reactive对象/数组,这个对象上的要转换的属性名/数组下标,可选默认值)	创建一个新的 Ref 变量，转换 Reactive 对象的某个字段为 Ref 变量。注意可选默认值仅对所声明的 Ref 变量有效，而不会影响原 Reactive 字段的值。
+
+toRefs(reactive变量)	创建一个新的对象，它的每个字段都是 Reactive 对象各个字段的 Ref 变量。与 toRef 不同的是toRefs 只接收了一个参数，是一个 reactive 变量。
+
+interface Member {
+  id: number
+  name: string
+}
+
+const userInfo: Member = reactive({
+  id: 1,
+  name: 'Petter',
+})
+
+const name = toRef(userInfo, 'name')
+console.log(name.value) // Petter
+
+// 传给 `toRefs` 作为入参
+const userInfoRefs = toRefs(userInfo)
+此时这个新的 userInfoRefs 变量，它的 TS 类型就不再是 Member 了。而是 ToRefs<Member>。
+
+等号左侧的 name 变量此时是一个 Ref 变量，这里因为 TypeScript 可以对其自动推导，因此声明时可以省略 TS 类型的显式指定，实际上该变量的类型是 Ref<string> 。
+之后在读取和赋值时，就需要使用 name.value 来操作，注意在重新赋值时会同时更新 name 和 userInfo.name 的值。
+// 修改前先查看初始值
+const name = toRef(userInfo, 'name')
+console.log(name.value) // Petter
+console.log(userInfo.name) // Petter
+
+// 修改 Ref 变量的值，两者同步更新
+name.value = 'Tom'
+console.log(name.value) // Tom
+console.log(userInfo.name) // Tom
+
+// 修改 Reactive 对象上该属性的值，两者也是同步更新
+userInfo.name = 'Jerry'
+console.log(name.value) // Jerry
+console.log(userInfo.name) // Jerry
+
+
+经过转换后的 Reactive 对象或数组就支持 ES6 的解构，并且不会失去响应性，因为解构后的每一个变量都具备响应性。
+// 为了提高开发效率，可以直接将 Ref 变量直接解构出来使用
+const { name } = toRefs(userInfo)
+console.log(name.value) // Petter
+
+// 此时对解构出来的变量重新赋值，原来的变量也可以同步更新
+name.value = 'Tom'
+console.log(name.value) // Tom
+console.log(userInfo.name) // Tom
+
+
+
+
+
+## 2.4 函数的声明和使用
+在 Vue 2 ，函数通常是作为当前组件实例上的方法在 methods 里声明，然后再在 mounted 等生命周期里调用，或者是在模板里通过 Click 等行为触发，由于组件内部经常需要使用 this 获取组件实例，因此不能使用箭头函数。
+export default {
+  data: () => {
+    return {
+      num: 0,
+    }
+  },
+  mounted: function () {
+    this.add()
+  },
+  methods: {
+    // 不可以使用 `add: () => this.num++`
+    add: function () {
+      this.num++
+    },
+  },
+}
+
+在 Vue 3 则灵活了很多，可以使用普通函数、 Class 类、箭头函数、匿名函数等等进行声明，可以将其写在 setup 里直接使用，也可以抽离在独立的 .js / .ts 文件里再导入使用。
+export default defineComponent({
+  setup() {
+    const msg = ref<string>('Hello World!')
+
+    // 这个要暴露给模板使用，必须 `return` 才可以使用
+    function updateMsg() {
+      msg.value = 'Hi World!'
+    }
+
+    // 这个要在页面载入时执行，无需 `return` 出去
+    const init = () => {
+      console.log('init')
+    }
+
+    onMounted(() => {
+      init()
+    })
+
+    return {
+      msg,
+      updateMsg,
+    }
+  },
+})
+当然在vue3.2使用setup语法糖之后更是方便直接在script块中声明即可使用。
+
+## 2.5 数据的侦听
+Vue 3 在保留原来的 watch 功能之外，还新增了一个 watchEffect 帮助更简单的进行侦听。
+在 Vue 2中监听器 是和 data 、 methods 同级的配置，并且声明语法类型很多。
+export default {
+  data() {
+    return {
+      a: 1,
+      b: 2,
+      c: {
+        d: 4,
+      },
+      e: 5,
+      f: 6,
+    }
+  },
+  // 注意这里，放在 `data` 、 `methods` 同个级别
+  watch: {
+    // 侦听顶级 Property
+    a(val, oldVal) {
+      console.log(`new: ${val}, old: ${oldVal}`)
+    },
+
+    // 字符串方法名
+    b: 'someMethod',
+
+    // 该回调会在任何被侦听的对象的 Property 改变时被调用，不论其被嵌套多深
+    c: {
+      handler(val, oldVal) {
+        console.log('c changed')
+      },
+      deep: true,
+    },
+
+    // 侦听单个嵌套 Property
+    'c.d': function (val, oldVal) {
+      // do something
+    },
+
+    // 该回调将会在侦听开始之后被立即调用
+    e: {
+      handler(val, oldVal) {
+        console.log('e changed')
+      },
+      immediate: true,
+    },
+
+    // 可以传入回调数组，它们会被逐一调用
+    f: [
+      'handle1',
+      function handle2(val, oldVal) {
+        console.log('handle2 triggered')
+      },
+      {
+        handler: function handle3(val, oldVal) {
+          console.log('handle3 triggered')
+        },
+        /* ... */
+      },
+    ],
+  },
+  methods: {
+    someMethod() {
+      console.log('b changed')
+    },
+    handle1() {
+      console.log('handle 1 triggered')
+    },
+  },
+}
+
+Vue 2 还可以通过实例方法 this.$watch() 这个 API 的用法来实现对某个数据的侦听，它接受三个参数： source 、 callback 和 options 。
+
+ // 生命周期钩子
+  mounted() {
+    this.$watch('a', (newVal, oldVal) => {
+      // ...
+    }, { immediate: true})
+  },
+
+在 Vue 3 的组合式 API 写法， watch 是一个可以接受 3 个参数的函数（保留了 Vue 2 的 this.$watch 这种用法，跟它非常像），在使用层面上简单了很多。
+// 一个用法走天下
+watch(
+  source, // 必传，要侦听的数据源
+  callback // 必传，侦听到变化后要执行的回调函数
+  options // 可选，一些侦听选项
+)
+它返回一个可以用来停止侦听的函数。
+
+### 2.5.1 侦听的数据源source
+watch API 的第 1 个参数 source 是要侦听的数据源，它的 TS 类型如下：
+export declare type WatchSource<T = any> = Ref<T> | ComputedRef<T> | (() => T)
+可以看到能够用于侦听的数据，是通过 
+响应式 API 定义的变量（ Ref<T> ），
+或者是一个 计算数据 （ ComputedRef<T> ），
+或者是一个 getter 函数 （ () => T ）如果要侦听响应式对象里面的某个值时使用。
+也就是说想定义的 watch 能够做出预期的行为(执行后面的回调函数)，数据源必须具备响应性或者是一个 getter ，如果只是通过 let 定义一个普通变量，然后去改变这个变量的值，这样是无法侦听的。
+
+### 2.5.2 侦听到变化后要执行的回调函数callback
+watch API 的第 2 个参数 callback 是侦听到数据变化时要做出的行为，它的 TS 类型如下：
+
+export declare type WatchCallback<V = any, OV = any> = (
+  value: V,
+  oldValue: OV,
+  onCleanup: OnCleanup
+) => any
+
+value	变化后的新值，类型和数据源保持一致
+oldValue	变化前的旧值，类型和数据源保持一致
+onCleanup	注册一个清理函数
+注意：第一个参数是新值，第二个才是原来的旧值！这里新值和旧值名字可以随意命名，不过最好语义化。
+如果侦听的数据源是一个 引用类型 时*
+value 和 oldValue 是完全相同的，因为指向同一个对象。
+另外，默认情况下，watch 是惰性的，也就是只有当被侦听的数据源发生变化时才执行回调。
+// 定义一个响应式数据
+const userInfo = reactive({
+    name: 'Petter',
+    age: 18,
+})
+
+// 2s后改变数据
+setTimeout(() => {
+    userInfo.name = 'Tom'
+}, 2000)
+
+/**
+    * 可以直接侦听这个响应式对象
+    * callback 的参数如果不用可以不写
+    */
+watch(userInfo, () => {
+    console.log('侦听整个 userInfo ', userInfo.name)
+})
+
+/**
+    * 也可以侦听对象里面的某个值
+    * 此时数据源需要写成 getter 函数
+    */
+watch(
+    // 数据源，getter 形式
+    () => userInfo.name,
+
+    // 回调函数 callback
+    (newValue, oldValue) => {
+        console.log('只侦听 name 的变化 ', userInfo.name)
+        console.log('打印变化前后的值', { oldValue, newValue })
+    }
+)
+如果有多个数据源要侦听，并且侦听到变化后要执行的行为一样，那么可以使用 批量侦听 。和 基础用法 的区别在于，数据源和回调参数都变成了数组的形式。
+数据源：以数组的形式传入，里面每一项都是一个响应式数据。
+回调参数：原来的 value 和 newValue 也都变成了数组，每个数组里面的顺序和数据源数组排序一致。
+
+
+// 定义多个数据源
+const message = ref<string>('')
+const index = ref<number>(0)
+
+// 2s后改变数据
+setTimeout(() => {
+    message.value = 'Hello World!'
+    index.value++
+}, 2000)
+
+watch(
+    // 数据源改成了数组
+    [message, index],
+
+    // 回调的入参也变成了数组，每个数组里面的顺序和数据源数组排序一致
+    ([newMessage, newIndex], [oldMessage, oldIndex]) => {
+        console.log('message 的变化', { newMessage, oldMessage })
+        console.log('index 的变化', { newIndex, oldIndex })
+    }
+)
+
+### 2.5.3 侦听选项options
+watch API 还接受第 3 个参数 options ，可选的一些侦听选项。它的 TS 类型如下：
+export declare interface WatchOptions<Immediate = boolean>
+  extends WatchOptionsBase {
+  immediate?: Immediate
+  deep?: boolean
+}
+
+// 继承的 base 类型
+export declare interface WatchOptionsBase extends DebuggerOptions {
+  flush?: 'pre' | 'post' | 'sync'
+}
+
+// 继承的 debugger 选项类型
+export declare interface DebuggerOptions {
+  onTrack?: (event: DebuggerEvent) => void
+  onTrigger?: (event: DebuggerEvent) => void
+}
+
+也就是说 options 是一个对象的形式传入，有以下几个选项：
+选项	     类型	      默认值	      可选值	                   作用
+deep	    boolean	      false     	 true | false	             是否进行深度侦听
+immediate	boolean	      false	         true | false	             是否立即执行侦听回调
+flush	    string	      'pre'	         'pre' | 'post' | 'sync'	 控制侦听回调的调用时机
+onTrack	    (e) => void			                                     在数据源被追踪时调用
+onTrigger	(e) => void			                                     在侦听回调被触发时调用
+注意：在侦听 reactive 对象或数组时，deep会默认为 true。
+{
+    deep：true,
+    immediate：true,
+    flush：'post'
+    ....
+}
+
+
+
 
 
 
