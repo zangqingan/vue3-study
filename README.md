@@ -647,6 +647,250 @@ onTrigger	(e) => void			                                     在侦听回调被�
 }
 
 
+### 2.5.4 停止监听
+当在定义一个 watch 行为的时候，它会返回一个用来停止侦听的函数。
+需要注意的是，如果启用了 immediate 选项 ，不能在第一次触发侦听回调时执行它。
+// 定义一个取消观察的变量，它是一个函数
+const unwatch = watch(message, () => {
+  // ...
+})
+
+// 在合适的时期调用它，可以取消这个侦听
+unwatch()
+
+## 2.6 watchEffect 副作用函数
+如果一个函数里包含了多个需要侦听的数据，一个一个数据去侦听太麻烦了，在 Vue 3 ，可以直接使用 watchEffect API 来简化的操作。它也是返回一个用于停止监听的函数。
+可以理解为一个简化版本的watch，它是立即执行传入的副作用回调函数，同时响应式追踪其依赖，并且在其依赖变更时会自动重新执行改函数。
+语法：
+watchEffect(
+  callback // 必传，侦听到变化后要执行的回调函数
+  options // 可选，一些侦听选项
+)
+// watchEffect 部分的 TS 类型
+// ...
+export declare type WatchEffect = (onCleanup: OnCleanup) => void
+
+export declare function watchEffect(
+  effect: WatchEffect,
+  options?: WatchOptionsBase
+): WatchStopHandle
+// ...
+跟watch类似，不过没有参数一。
+
+例子：
+ // 单独定义两个数据，后面用来分开改变数值
+const name = ref<string>('Petter')
+const age = ref<number>(18)
+
+// 定义一个调用这两个数据的函数
+const getUserInfo = (): void => {
+  console.log({
+    name: name.value,
+    age: age.value,
+  })
+}
+
+// 2s后改变第一个数据
+setTimeout(() => {
+  name.value = 'Tom'
+}, 2000)
+
+// 4s后改变第二个数据
+setTimeout(() => {
+  age.value = 20
+}, 4000)
+
+// 直接侦听调用函数，在每个数据产生变化的时候，它都会自动执行
+watchEffect(getUserInfo)
+
+和watch的区别：
+  watch 可以访问侦听状态变化前后的值，而 watchEffect 没有。
+  watch 是在属性改变的时候才执行，而 watchEffect 则默认会执行一次，然后在属性改变的时候也会执行。
+
+回调函数是和watch一样的，而可选的侦听选项对比 watch API ，它不支持 deep 和 immediate 选项，请记住这一点，其他的选项用法是一样的。
+
+## 2.7 计算属性
+和 Vue 2.0 一样，数据的计算也是使用 computed API ，它可以通过现有的响应式数据，去通过计算得到新的响应式变量，用过 Vue 2.0 的开发者应该不会太陌生，但是在 Vue 3.0 ，在使用方式上也是变化非常大！
+它可以是接收一个getter函数，返回一个只读的响应式ref对象。该ref对象通过 .value访问具体的返回值。
+也可以接受一个带有getter和setter函数的对象来创建一个可读可写的ref对象,请注意，必须使用 get 和 set 这 2 个方法名，也只接受这 2 个方法。
+语法：
+computed(getter)
+computed({
+  get(){},
+  set(newValue) {}
+})
+ts类型：
+// 只读
+function computed<T>(
+  getter: () => T,
+  // 查看下方的 "计算属性调试" 链接
+  debuggerOptions?: DebuggerOptions
+): Readonly<Ref<Readonly<T>>>
+
+// 可写的
+function computed<T>(
+  options: {
+    get: () => T
+    set: (value: T) => void
+  },
+  debuggerOptions?: DebuggerOptions
+): Ref<T>
+
+在vue2中computed 和 data 在同级配置，并且不可以和 data 里的数据同名重复定义
+data() {
+  return {
+    firstName: 'Bill',
+    lastName: 'Gates',
+  }
+},
+
+// 注意这里定义的变量，都要通过函数的形式来返回它的值
+computed: {
+  // 普通函数可以直接通过熟悉的 this 来拿到 data 里的数据
+  fullName() {
+    return `${this.firstName} ${this.lastName}`
+  },
+  // 箭头函数则需要通过参数来拿到实例上的数据
+  fullName2: (vm) => `${vm.firstName} ${vm.lastName}`,
+},
+
+而vue3 跟watch类似也是统一了写法，减少心智负担。就两种一种只读，一种可读写。
+// 定义基本的数据
+const firstName = ref<string>('Bill')
+const lastName = ref<string>('Gates')
+
+// 定义需要计算拼接结果的数据
+const fullName = computed(() => `${firstName.value} ${lastName.value}`)
+
+// 这里配合setter的需要，改成了另外一种写法
+const fullName = computed({
+  // getter还是返回一个拼接起来的全名
+  get() {
+    return `${firstName.value} ${lastName.value}`
+  },
+  // setter这里改成只更新firstName，注意参数也定义TS类型
+  set(newFirstName: string) {
+    firstName.value = newFirstName
+  },
+})
+console.log(fullName.value) // 输出 Bill Gates
+
+
+创建一个只读的计算属性ref：
+const count = ref(1)
+const plusOne = computed(() => count.value + 1)
+console.log(plusOne.value) // 2
+plusOne.value++ // 错误
+
+创建一个可写的计算属性 ref：
+const count = ref(1)
+const plusOne = computed({
+  get: () => count.value + 1,
+  set: (val) => {
+    count.value = val - 1
+  }
+})
+
+plusOne.value = 1
+console.log(count.value) // 0
+
+计算属性和方法区别
+1.性能优势计算属性是基于它们的响应依赖关系缓存的，只在相关响应式依赖发生改变时它们才会重新求值。
+
+实际开发中：数据的拼接和计算就可以考虑使用计算属性。组件复用时也可以考虑使用。
+
+## 2.8 指令
+和vue2没什么区别，不过是删除了一些，新增了一些。
+也是分为内置和自定义两种。
+
+## 2.9 插槽
+Vue 在使用子组件的时候，子组件在 template 里类似一个 HTML 标签，可以在这个子组件标签里传入任意模板代码以及 HTML 代码，这个功能就叫做 “插槽” 。
+组件名
+  其它内容
+组件名
+默认情况下，子组件使用 <slot /> 标签即可渲染父组件传下来的插槽内容，例如
+<template>
+  <Child>
+    <!-- 注意这里，子组件标签里面传入了 HTML 代码 -->
+    <p>这是插槽内容</p>
+  </Child>
+</template>
+在子组件中,使用slot标签接收即可。
+<template>
+  <slot />
+</template>
+有时候可能需要指定多个插槽，并且每个插槽内容还不一样这时就需要具名插槽。
+所谓具名插槽就是有名字的插槽，就是给slot标签添加上name属性。
+<!-- 显示标题的插槽内容 -->
+<div class="title">
+  <slot name="title" />
+</div>
+
+<!-- 显示作者的插槽内容 -->
+<div class="author">
+  <slot name="author" />
+</div>
+
+<!-- 其他插槽内容放到这里 -->
+<div class="content">
+  <slot />
+</div>
+使用时父组件通过 template 标签绑定 v-slot指令绑定插槽名字，来指定传入哪个插槽里：
+  <Child>
+    <!-- 传给标题插槽 -->
+    <template v-slot:title>
+      <h1>这是标题</h1>
+    </template>
+
+    <!-- 传给作者插槽 -->
+    <template v-slot:author>
+      <h1>这是作者信息</h1>
+    </template>
+
+    <!-- 传给默认插槽 -->
+    <p>这是插槽内容</p>
+  </Child>
+v-slot指令有语法糖别名 # ，所以也可以写成如下
+<Child>
+    <!-- 传给标题插槽 -->
+    <template #title>
+      <h1>这是标题</h1>
+    </template>
+
+    <!-- 传给作者插槽 -->
+    <template #author>
+      <h1>这是作者信息</h1>
+    </template>
+
+    <!-- 传给默认插槽 -->
+    <p>这是插槽内容</p>
+  </Child>
+可以给 slot 标签添加内容，例如 <slot>默认内容</slot> ，当父组件没有传入插槽内容时，会使用默认内容来显示，默认插槽和具名插槽均支持该功能。
+有一条规则需要记住：
+  父组件里的所有内容都是在父级作用域中编译的
+  子组件里的所有内容都是在子作用域中编译的
+
+## 2.10 CSS 样式与预处理器 
+Vue 组件的 CSS 样式部分，Vue 3 保留着和 Vue 2 完全一样的写法。
+深度操作符：
+使用 scoped 后，父组件的样式将不会渗透到子组件中，但也不能直接修改子组件的样式。
+如果确实需要进行修改子组件的样式，必须通过 ::v-deep（完整写法） 或者 :deep（快捷写法） 操作符来实现。
+新的 deep 写法是作为一个类似 JS “函数” 那样去使用，需要深度操作的样式或者元素名，作为 “入参” 去传入。
+:deep(.类名) {
+  //样式
+}
+使用 CSS 预处理器 在vue2中使用除了安装依赖之外还需要配置loader。而vue3使用vite时已经内置了对预处理文件的处理。安装依赖之后在style标签的lang属性指明使用哪个预处理器即可直接编写对应的代码。
+
+
+
+# 三、vue3组件通信
+
+# 四、vue3路由
+
+# 五、vue3状态管理
+
+# 六、vue3插件
+
 
 
 
