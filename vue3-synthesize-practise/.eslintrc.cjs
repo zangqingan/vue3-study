@@ -1,33 +1,36 @@
 /* eslint-env node */
-require('@rushstack/eslint-patch/modern-module-resolution')
-
+require("@rushstack/eslint-patch/modern-module-resolution")
 module.exports = {
   root: true,
   extends: [
-    'plugin:vue/vue3-essential',
-    'eslint:recommended',
-    '@vue/eslint-config-typescript',
-    '@vue/eslint-config-prettier',
+    "plugin:vue/vue3-essential",
+    "eslint:recommended",
+    "@vue/eslint-config-typescript",
+    "@vue/eslint-config-prettier"
   ],
   parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    ecmaFeatures: {
-      // 非 react 项目关闭 jsx 语法校验,默认为 true
-      jsx: false,
-    },
+    ecmaVersion: "latest"
   },
-  // 自定义校验规则
   rules: {
-    'prettier/prettier': [
-      'error',
+    "prettier/prettier": [
+      "error",
       {
-        singleQuote: true, // 使用单引号
-        parser: 'flow',
-        semi: false, // 不用分号结尾
-        wrapAttributes: false, // 不用属性独占一行
-        endOfLine: 'auto',
-      },
-    ],
-  },
+        // 行尾不需要有分号
+        semi: false,
+        // 一行最多 120 字符
+        printWidth: 100,
+        wrapAttributes: false,
+        // 是否使用单引号
+        singleQuote: false,
+        // 对象的 key 仅在必要时用引号
+        quoteProps: "as-needed",
+        // 大括号内的首尾需要空格
+        bracketSpacing: true,
+        // 禁止使用尾逗号
+        trailingComma: "none",
+        // 箭头函数，函数体一个参数的时候禁止使用括号
+        arrowParens: "avoid"
+      }
+    ]
+  }
 }
