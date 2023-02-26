@@ -897,6 +897,123 @@ src
 │ # 项目入口文件
 └─main.ts
 
+## 4.5 导航守卫 
+Vue 2 时使用的路由一样， Vue 3 也支持导航守卫，并且用法基本上是一样的。主要用来通过跳转或取消的方式守卫导航，本质其实就是几个专属的钩子函数
+主要有以下几种全局的，单个路由独享的，或者组件级的。
+完整的导航解析流程：
+    导航被触发。
+    在失活的组件里调用 beforeRouteLeave 守卫。
+    调用全局的 beforeEach 守卫。
+    在重用的组件里调用 beforeRouteUpdate 守卫(2.2+)。
+    在路由配置里调用 beforeEnter。
+    解析异步路由组件。
+    在被激活的组件里调用 beforeRouteEnter。
+    调用全局的 beforeResolve 守卫(2.5+)。
+    导航被确认。
+    调用全局的 afterEach 钩子。
+    触发 DOM 更新。
+    调用 beforeRouteEnter 守卫中传给 next 的回调函数，创建好的组件实例会作为回调函数的参数传入。
+### 4.5.1 全局导航守卫
+就是在创建 router实例 的时候进行全局的配置，也就是说，只要配置了这些钩子，那么所有的路由在被访问到的时候，都会触发这些钩子函数。全局有三个
+可用钩子	            含义	          触发时机
+beforeEach	       全局前置守卫	  在路由跳转前触发
+beforeResolve	     全局解析守卫	  在导航被确认前，同时在组件内守卫和异步路由组件被解析后
+afterEach	         全局后置守卫	  在路由跳转完成后触发
+每个守卫方法接收两个参数：
+  to: 即将要进入的目标路由对象也就是要跳进去的路由对象。
+  from: 当前导航正要离开的路由
+可以返回的值如下:
+  false: 取消当前的导航。如果浏览器的 URL 改变了(可能是用户手动或者浏览器后退按钮)，那么 URL 地址会重置到 from 路由对应的地址。
+  一个路由地址: 通过一个路由地址跳转到一个不同的地址，就像你调用 router.push() 一样。
+
+
+全局前置守卫 beforeEach 这是导航守卫里面运用的最多的一个钩子函数，通常将其称为 “路由拦截”。
+因为它是导航变化前调用，所以可以在导航跳转之前做一些拦截操作。比如在进入路由之前，根据 Meta 路由元信息 的配置，设定路由的网页标题或者判断是否需要登录。
+或者针对一些需要 ID 参数，但参数丢失的路由做拦截，比如：很多网站的文章详情页都是类似 https://example.com/article/123 这样格式的地址，是需要带有文章 ID 作为 URL 的一部分，如果只访问 https://example.com/article 则需要拦截掉。
+
+router.beforeEach((to, from) => {
+  const { title, isNoLogin } = to.meta
+  document.title = title || '默认标题'
+  if (!isNoLogin) return '/login'
+})
+
+全局解析守卫 beforeResolve 它在每次导航时都会触发，但是确保在导航被确认之前，同时在所有组件内守卫和异步路由组件被解析之后，解析守卫就被正确调用。它是获取数据或执行任何其他操作（如果用户无法进入页面时你希望避免执行的操作）的理想位置。它通常会用在一些申请权限的环节，比如一些 H5 页面需要申请系统相机权限、一些微信活动需要申请微信的登录信息授权，获得权限之后才允许获取接口数据和给用户更多的操作，使用 beforeEach 时机太早，使用 afterEach 又有点晚，那么这个钩子的时机就刚刚好。
+这个例子就可以确保用户可以访问自定义 meta 属性 requiresCamera 的路由
+// https://router.vuejs.org/zh/guide/advanced/navigation-guards.html
+router.beforeResolve(async (to) => {
+  // 如果路由配置了必须调用相机权限
+  if (to.meta.requiresCamera) {
+    // 正常流程，咨询是否允许使用照相机
+    try {
+      await askForCameraPermission()
+    } catch (error) {
+      // 容错
+      if (error instanceof NotAllowedError) {
+        // ... 处理错误，然后取消导航
+        return false
+      } else {
+        // 如果出现意外，则取消导航并抛出错误传给全局处理器
+        throw error
+      }
+    }
+  }
+})
+
+全局后置钩子 afterEach 类似每个路由都要执行一次，但又不必在页面渲染前操作的，都可以放到后置钩子里去执行。
+和守卫不同的是，这些钩子不会接受 next 函数也不会改变导航本身，它们对于分析、更改页面标题、声明页面等辅助功能以及许多其他事情都很有用。
+router.afterEach((to, from) => {
+  sendToAnalytics(to.fullPath)
+})
+
+### 4.5.2 路由独享导航守卫
+所谓路由独享导航守卫就是必须配置在 routes 的 JSON 树里面，挂在对应的路由下面的守卫。它是用来针对个别路由定制一些特殊功能，可以减少在全局钩子里面写一堆判断。它和全局钩子 beforeEach 的作用相同，都是在进入路由之前触发，触发时机比 beforeResolve 要早。
+顺序：beforeEach（全局） > beforeEnter（独享） > beforeResolve（全局）。
+路由独享前置守卫 beforeEnter 只在进入路由时触发，不会在 params、query 或 hash 改变时触发。
+ {
+    path: '/users/:id',
+    component: UserDetails,
+    <!-- 路由独享导航守卫 -->
+    beforeEnter: (to, from) => {
+      // 取消导航
+      return false
+    },
+  },
+
+例如，从 /users/2 进入到 /users/3 或者从 /users/2#info 进入到 /users/2#projects，都不会再次触发。
+它们只有在 从一个不同的 路由导航时，才会被触发。
+
+### 4.5.3 vue单文件组件内的导航守卫
+组件也有专属的路由钩子，和vue2时不同的时vue3的组件内导航守卫 移除了 beforeRouteEnter 这个钩子。
+使用的是composition api如下两个守卫。当组件被卸载时，导航守卫将被移除。
+可用钩子	                含义	           触发时机
+onBeforeRouteUpdate	组件内的更新守卫	在当前路由改变，但是该组件被复用时调用
+onBeforeRouteLeave	组件内的离开守卫	导航离开该组件的对应路由时调用
+
+组件内的更新守卫 onBeforeRouteUpdate 类似于以前的beforeRouteUpdate。
+在当前路由改变，但是该组件被复用时，重新调用里面的一些函数用来更新模板数据的渲染。
+比如一个内容网站，通常在文章详情页底部会有相关阅读推荐，这个时候就会有一个操作场景是，从文章 A 跳转到文章 B。
+比如从 https://example.com/article/111 切去 https://example.com/article/222 ，这种情况就属于 “路由改变，但是组件被复用” 的情况了。
+这种情况下，原本放在 onMounted 里执行数据请求的函数就不会被调用，可以借助该钩子来实现渲染新的文章内容。
+
+
+组件内的离开守卫 onBeforeRouteLeave 类似于以前的beforeRouteLeave。
+可以在离开当前路由之前，实现一些离开前的判断拦截。这个离开守卫通常用来禁止用户在还未保存修改前突然离开，可以通过 return false 来取消用户离开当前路由。
+ // 调用离开守卫
+onBeforeRouteLeave((to, from) => {
+  // 弹出一个确认框
+  const confirmText = '确认要离开吗？您的更改尚未保存！'
+  const isConfirmLeave = window.confirm(confirmText)
+
+  // 当用户点取消时，不离开路由
+  if (!isConfirmLeave) {
+    return false
+  }
+})
+
+
+
+
+
 # 五、vue3状态管理
 
 # 六、vue3插件

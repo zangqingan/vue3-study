@@ -29,7 +29,7 @@ export default defineConfig({
     vue(),
     viteMockServe({
       // 解析根目录下的mock文件夹
-      mockPath: './src/mock',
+      mockPath: './src/mock', // 解析指定目录下的mock文件夹
       prodEnabled: prodMock,
       injectCode: `
           import { setupProdMockServer } from './utils/mockProdServer';

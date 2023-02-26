@@ -11,5 +11,6 @@ Object.values(modules).forEach(module => {
 })
 
 export function setupProdMockServer() {
+  // 这个是用来注册mock的
   createProdMockServer(mockModules)
 }
