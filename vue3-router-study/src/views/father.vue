@@ -7,6 +7,7 @@
       :name="userInfo.name"
       @update-age="handleUpdate"
       @reduce-age="handleReduce"></Child>
+    <div>我是父组件中的定义的输入框字体通过子组件改变:{{ searchText }}</div>
     <ModelChild
       v-model="searchText"
       v-model:id="userInfo.id"
@@ -38,6 +39,22 @@ const handleUpdate = (newAge: number) => {
 const handleReduce = (newAge: number) => {
   userInfo.age -= newAge
 }
+// 声明一个响应性变量并 provide 其自身
+// 孙组件获取后可以保持响应性
+const msg = ref('Hello World!')
+provide('msg', msg)
+// 只 provide 响应式变量的值
+// 孙组件获取后只会得到当前的值
+provide('msgValue', msg.value)
+
+// 声明一个方法并 provide
+function printMsg() {
+  console.log(msg.value)
+}
+provide('printMsg', printMsg)
+
+const location = ref('North Pole')
+provide('location', location)
 </script>
 
 <style lang="scss" scoped>

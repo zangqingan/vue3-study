@@ -3,6 +3,7 @@
     <div>{{ title }}</div>
     <div>{{ id }}</div>
     <div>{{ name }}</div>
+    <div>中央事件总线传值：{{ hello }}</div>
     <br />
     <el-button
       type="primary"
@@ -14,10 +15,14 @@
       @click="handleReduce"
       >子传父-</el-button
     >
+    <br />
+    <Grandson></Grandson>
   </div>
 </template>
 
 <script setup lang="ts">
+import Grandson from './grandson.vue'
+import emitter from '@/utils/eventBus'
 // 运行时声明要接收的props
 // const props = defineProps({
 //   title: {
@@ -69,12 +74,27 @@ const emit = defineEmits<{
   (e: 'update-age', value: number): void
   (e: 'reduce-age', value: number): void
 }>()
+
+const hello = ref()
+// 中央事件总线
+// 启用侦听
+emitter.on('sayHi', function sayHi(msg = 'Hello World!') {
+  console.log(msg)
+})
+emitter.on('hello', e => {
+  hello.value = e
+})
+
+// 在组件卸载之前移除侦听
+onBeforeUnmount(() => {
+  // 全部销毁
+  emitter.all.clear()
+})
 </script>
 
 <style lang="scss" scoped>
 .child-content {
   border: 1px solid salmon;
   width: 200px;
-  height: 200px;
 }
 </style>

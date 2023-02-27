@@ -5,10 +5,17 @@
     <div>{{ age }}</div>
     <div>{{ name }}</div>
     <el-input v-model="value"></el-input>
+    <br />
+    <div>下面是依赖注入的值</div>
+    <div>其它注入的数据: {{ location }}</div>
   </div>
 </template>
 
 <script setup lang="ts">
+import emitter from '@/utils/eventBus'
+emitter.emit('sayHi', 'Hello')
+const hello = ref('中央事件总线传值1111111')
+emitter.emit('hello', hello)
 interface Props {
   id?: number
   age?: number
@@ -26,6 +33,8 @@ const value = computed({
     emit('update:modelValue', value)
   }
 })
+
+const location = inject('location')
 </script>
 
 <style lang="scss" scoped>

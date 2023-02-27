@@ -979,23 +979,131 @@ const emit = defineEmits<{
     v-model:age="userInfo.age"
   />
 </template>
-一个 v-model 其实就是一个 prop ，它支持的数据类型和 prop 是一样的，所以子组件在接收数据的时候，完全按照 props 去定义就可以了。
+一个 v-model 其实就是一个 prop ，它支持的数据类型和 prop 是一样的，所以子组件在接收数据的时候，完全按照 props 去定义就可以了。不同在于数据流不再是单向的。
 不同在于emits的声明上。
-update:要绑定的属性名，都需要添加update:前缀。
+update:要绑定的属性名，都需要添加update:前缀。之后父组件不用v-on显式监听因为使用了语法糖v-model已经帮忙监听了。
 defineEmits(['update:title'])
 
+### 3.1.3 ref / emits
+和vue2一样可以给一个元素或者组件添加ref属性定义一个名字，类似html标签的id属性。就可以获取到元素对象实例。
+与vue2不同的是，vue3使用composition api ref(null)定义一个一样名字的ref即可获取到对应的实例。
+<!-- Father.vue -->
+<template>
+  <Child ref="child" />
+</template>
+然后在 script 部分定义好对应的变量名称 child,即可通过该变量操作子组件上暴露出来的变量或方法。
+子组件需要使用 defineExpose() 宏显性地声明要暴露出去的变量或方法这样别人才能通过ref组件实例访问到。
+const child = ref(null)
+不过需要注意的是请保证视图渲染完毕后再执行操作，一种方法是在挂载后生命周期内执行，一种是使用全局方法nextTick()
+onMounted(async () => {
+  // 执行子组件里面的 AJAX 请求函数
+  await child.value!.queryList()
+  // 显示子组件里面的弹窗
+  child.value!.isShowDialog = true
+})
+
+nextTick(() => {
+  // 执行子组件里面的 AJAX 请求函数
+  await child.value!.queryList()
+  // 显示子组件里面的弹窗
+  child.value!.isShowDialog = true
+})
+
+而子组件如果想主动向父组件通讯，也需要使用 emits 和之前是一样的。
+
+### 3.1.4 provide / inject
+依赖注入，通常情况下，当我们需要从父组件向子组件传递数据时，会使用 props。但是当有多层级嵌套的组件，孙层级的需要到祖先级别组件的数据时。一种方法是一层一层 props传递。但是这种方法无疑是非常繁琐而且不利于维护阅读。
+这时可以使用依赖注入。这个方法可以用在父子，祖孙，或更多曾经的祖孙组件间的通信。
+一个祖先组件相对于其所有的后代组件，会作为依赖提供者通过 provide 向后代组件提供数据和方法。
+函数接收两个参数。第一个参数被称为注入名，可以是一个字符串或是一个 Symbol。后代组件会用注入名来查找期望注入的值。一个组件可以多次调用 provide()，使用不同的注入名，注入不同的依赖值。
+第二个参数是提供的值，值可以是任意类型，包括响应式的状态，比如一个 ref。
+provide(/* 注入名 */, /* 值 */)
+provide('message','hello!')
+最后，如果你想确保提供的数据不能被注入方的组件更改，你可以使用 readonly() 来包装提供的值。
+provide('read-only-count', readonly(count))
+
+后代组件通过 inject函数 注入祖先组件提供数据和方法。
+如果提供的值是一个 ref，注入进来的会是该 ref 对象，而不会自动解包为其内部的值。这使得注入方组件能够通过 ref 对象保持了和供给方的响应性链接。
+inject(/* 注入名 */, /* 默认值 */)
+const message = inject('message')
 
 
+注意：
+1.无论组件层次结构有多深，发起 provide 的组件都可以作为其所有下级组件的依赖提供者。
+2.provide 不是响应式的，如果要使其具备响应性，需要传入响应式数据。
+3.当提供 / 注入响应式的数据时，建议尽可能将任何对响应式状态的变更都保持在供给方组件中。
+
+## 3.2 兄弟组件通信
+兄弟组件是指两个组件都挂载在同一个 Father.vue 下，但两个组件之间并没有什么直接的关联。
+这种层级关系下，如果组件之间要进行通信，目前通常有这两类选择
+1。还是可以通过props先传递给父组件再传给兄弟组件，不过不推荐。
+2。借助 全局组件通信 的方案达到目的 
+这个和vue2时一样的，可以说就两种中央事件总线 eventbus以及vue官方提供的全局状态管理插件。
+所以不做展开而是在下一节的全局组件通信中一起说明。
+
+## 3.3 全局组件通信
+所谓全局组件通信是指项目下两个任意组件，不管是否有直接关联（例如父子关系、爷孙关系）都可以直接进行交流的通信方案。
+在vue2中有eventbus和vuex，而vue3类似的也有eventbus和pinia。思想是一样的，不同在于使用方式上。
+
+### 3.3.1 EventBus中央事件总线
+在 Vue 2 ，使用 EventBus 无需导入第三方插件，而是通过再创建一个vue实例来实现的。
+比如可以在项目下的 utils 文件夹里，创建一个名为 eventBus.ts 的文件，导出一个新的 Vue 实例即可。
+// src/utils/eventBus.ts
+import Vue from 'vue'
+export default new Vue()
+
+先在负责接收事件的组件里，利用 Vue 的生命周期，通过 eventBus.$on 添加事件侦听，通过 eventBus.$off 移除事件侦听。
+  mounted() {
+    // 在组件创建时，添加一个名为 `hello` 的事件侦听
+    eventBus.$on('hello', () => {
+      console.log('Hello World')
+    })
+  }
+  beforeDestroy() {
+    // 在组件销毁前，通过 `hello` 这个名称移除该事件侦听
+    eventBus.$off('hello')
+  }
+
+然后在另外一个组件里通过 eventBus.$emit 触发事件侦听。
+methods: {
+  sayHello() {
+    // 触发名为 `hello` 的事件
+    eventBus.$emit('hello')
+  }
+}
+
+而Vue 3 应用实例不再实现事件触发接口，因此移除了 $on 、 $off 和 $once 这几个事件 API ，无法像 Vue 2 一样利用 Vue 实例创建 EventBus。只能通过第三方插件了，这里使用工作中实际使用过的 mitt。 注意：因为是第三方插件所以会有多种不同的选择，根据实际情况出发即可。
+安装：npm i mitt
+使用上和vue2类似
+// src/utils/eventBus.ts
+import mitt from 'mitt'
+export default mitt()
+
+on	注册一个侦听事件，用于接收数据
+emit	调用方法发起数据传递
+off	用来移除侦听事件
+clear 清空所有。
+
+const emitter from 'src/utils/eventBus.ts'
+emitter.emit('hello', hello)
+emitter.on('hello', e => console.log('foo', e))
+function hello() {}
+emitter.on('hello', hello)  
+emitter.off('hello', hello)  
+emitter.all.clear()
 
 
+// 在组件卸载之前移除侦听
+onBeforeUnmount(() => {
+  // 一个一个手动销毁
+  emitter.off('hello', hello)  
+  // 全部销毁
+  emitter.all.clear()
+})
 
 
-
-
-
-
-
-
+### 3.3.2 官方插件pinia
+对比vue2，vue3官方的全局状态管理插件不再是vuex，虽然你依然可以使用它。不过不推荐显示都是使用大菠萝pinia。思想是不变的，只是使用方法变了。
 
 
 # 四、vue3路由
