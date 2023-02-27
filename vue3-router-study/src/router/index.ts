@@ -4,9 +4,9 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/:pathMatch(.*)*',
-      name: '404',
-      component: () => import('@/views/404.vue')
+      path: '/father',
+      name: 'father',
+      component: () => import('@/views/father.vue')
     }
   ]
 })

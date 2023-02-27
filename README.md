@@ -884,6 +884,119 @@ Vue 组件的 CSS 样式部分，Vue 3 保留着和 Vue 2 完全一样的写法�
 
 
 # 三、vue3组件通信
+vue3的组件通信和vue2本质上没区别，不同在于使用方式。
+
+## 3.1 父子组件通信
+vue中最常见也是最常用的通信，它是指，B 组件引入到 A 组件里渲染，此时 A 是 B 的父级；B 组件的一些数据需要从 A 组件拿，B 组件有时也要告知 A 组件一些数据变化情况。
+和vue2一样最常使用方法是 props和emit实现，此外还有 v-model/emits，ref/emits，provide/inject，eventbus，pinia这些常见的。
+
+### 3.1.1 props / emits 
+这是 Vue 跨组件通信最常用，也是基础的一个方案，它的通信过程是：
+  父组件 Father.vue 通过 props 向子组件 Child.vue 传值
+  子组件 Child.vue 则可以通过 emits 向父组件 Father.vue 发起事件通知
+最常见的场景就是统一在父组件发起 AJAX 请求，拿到数据后，再根据子组件的渲染需要传递不同的 props 给不同的子组件使用。
+同vue2一样，先在父组件中定义好变量，然后把要传递的数据通过属性的方式绑定在子组件标签上。
+<!-- Father.vue -->
+<template>
+  <Child
+    title="用户信息"
+    :index="1"
+    :uid="userInfo.id"
+    :user-name="userInfo.name"
+  />
+</template>
+这样就完成了 props 数据的下发传递。不使用v-bind就是传的普通字符串，如果是变量名就使用v-bind动态绑定
+注意：官方文档推荐对 camelCase 风格（小驼峰）命名的 props和emits函数名 ，在绑定时使用和 HTML attribute 一样的 kebab-case 风格（短横线），例如使用 user-name 代替 userName 传递。
+对于组件名我们推荐使用 PascalCase（大驼峰）命名，因为这提高了模板的可读性，能帮助我们区分 Vue 组件和原生 HTML 元素。
+子组件接收：在vue3.2之后一个组件可以使用 defineProps() 宏来显式声明它所需要接受的 props，这样 Vue 才能知道外部传入的哪些是 props，哪些是透传 attribute。
+可以使用字符串数组来声明 prop 外，还可以使用对象的形式。
+对于以对象形式声明中的每个属性，key 是 prop 的名称，而值则是该 prop 预期类型的构造函数。
+比如，如果要求一个 prop 的值是 number 类型，则可使用 Number 构造函数作为其声明的值。
+<!-- child.vue -->
+const props = defineProps(['foo'])
+// 或者
+const props = defineProps({
+  title: {
+    type: String,//构造函数
+    default: ''
+  }
+})
+这种被称之为“运行时声明”，因为defineProps() 宏函数支持从它的参数中推导类型。所以传递给 defineProps() 的参数会作为运行时的 props 选项使用。
+
+而在ts里可以将 props 的类型移入一个单独的接口中，通过泛型参数来定义 props 的类型。这被称之为“基于类型的声明”。
+注意：基于类型的声明或者运行时声明可以择一使用，但是不能同时使用。
+// 或者
+interface Props {
+  title?: string
+  id?: number
+  name?: string
+}
+const props = defineProps<Props>()
+使用和vue2一样在模板template中可以直接使用，而在script中需要使用 props.属性名的方式访问。
+
+注意：使用泛型参数时必须是以下几种类型之一
+一个类型字面量
+defineProps<{ /*... */ }>()
+类型字面量可以抽离用一个变量名接收，或者接口，或者类型别名。
+所以可以是同一个文件中的：对象类型字面量的引用，接口，类型别名。
+interface Props {/* ... */}
+const Props = {}
+type Props = {}
+defineProps<Props>()
+注意：对象类型字面量的引用，接口，类型别名可以从其他文件导入。但是，传递给 defineProps 的泛型参数本身不能是一个导入的类型而必须是在同一个文件中定义的变量。
+这是因为 Vue 组件是单独编译的，编译器目前不会抓取导入的文件以分析源类型。
+
+当使用基于类型的声明时，我们失去了为 props 声明默认值的能力。
+这可以通过 withDefaults 编译器宏解决,它被编译为等效的运行时 props default 选项。
+对象和数组类型默认值跟原来一样需要使用一个函数返回。
+
+子组件传值给父组件,和vue2一样发射事件出去，然后然父组件使用v-on(缩写为 @) 来监听发射的事件即可。
+和props一样，emits也是显式地通过 defineEmits() 宏来声明它要触发的事件,defineEmits() 会返回一个与$emit相同作用的函数供我们使用。有字符串数组来声明 emits 和使用对象的两种形式。
+同时 emit 函数的类型标注也可以通过运行时声明或是类型声明进行
+// 运行时
+const emit = defineEmits(['change', 'update'])
+// 发射事件
+emit('change', payload)
+payload可以是一个变量，也可以是一个对象(最好使用对象的形式传递)
+
+// 基于类型
+const emit = defineEmits<{
+  (e: 'change', id: number): void
+  (e: 'update', value: string): void
+}>()
+
+注意：和vue2一样的vue3所有的 props 也遵循着单向绑定原则，props 因父组件的更新而变化，自然地将新的状态向下流往子组件，而不会逆向传递。这避免了子组件意外修改父组件的状态的情况，不然应用的数据流将很容易变得混乱而难以理解。
+
+### 3.1.2 v-model / emits 
+和 Vue 2 不同， Vue 3 可以直接绑定 v-model ，而无需在子组件指定 model 选项 ，并且 Vue 3 的 v-model 需要使用英文冒号 : 指定要绑定的属性名，同时也支持绑定多个 v-model写多个 v-model 即可。
+默认情况下，v-model 在组件上都是使用 modelValue 作为 prop，并以 update:modelValue 作为对应的要发射的事件名字。当然也可以在冒号: 指定要修改的名字。
+它是利用v-model 可以在组件上使用以实现双向绑定。
+<!-- Father.vue -->
+<template>
+  <Child
+    v-model:uid="userInfo.id"
+    v-model:username="userInfo.name"
+    v-model:age="userInfo.age"
+  />
+</template>
+一个 v-model 其实就是一个 prop ，它支持的数据类型和 prop 是一样的，所以子组件在接收数据的时候，完全按照 props 去定义就可以了。
+不同在于emits的声明上。
+update:要绑定的属性名，都需要添加update:前缀。
+defineEmits(['update:title'])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # 四、vue3路由
 Vue 3 路由和vue2路由没有本质上的区别，引入路由的方式和 Vue 2 一样，路由的管理也是放在 src/router 这个目录下。只是使用方法上有区别
