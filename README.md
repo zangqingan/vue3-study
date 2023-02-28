@@ -1103,7 +1103,34 @@ onBeforeUnmount(() => {
 
 
 ### 3.3.2 官方插件pinia
-对比vue2，vue3官方的全局状态管理插件不再是vuex，虽然你依然可以使用它。不过不推荐显示都是使用大菠萝pinia。思想是不变的，只是使用方法变了。
+对比vue2，vue3官方的全局状态管理插件不再是vuex，虽然你依然可以使用它。不过不推荐现在都是使用大菠萝pinia。两者的作用和用法都比较相似，但 Pinia 的设计更贴近 Vue 3 组合式 API 的用法。
+安装：
+npm install pinia
+在入口文件引入并创建一个 pinia 实例(根 store)并将其传递给应用注册即可启用pinia
+import { createApp } from 'vue'
+import { createPinia } from 'pinia' // 导入 Pinia
+import App from '@/App.vue'
+
+createApp(App)
+  .use(createPinia()) // 启用 Pinia
+  .mount('#app')
+如此Pinia 就集成到的项目里了。
+
+pinia和vuex以及vue组件的对比
+作用	      Vue-Component	    Vuex	             Pinia
+数据管理	      data	        state	             state
+数据计算	    computed	     getters	           getters
+行为方法	     methods	   mutations/actions	   actions
+可以看到 Pinia 的结构和用途都和 Vuex 与 Component 非常相似，并且 Pinia 相对于 Vuex ，在行为方法部分去掉了 mutations （同步操作）和 actions （异步操作）的区分，更接近组件的结构，入门成本会更低一些。
+
+Store (如 Pinia) 是一个保存状态和业务逻辑的实体，它并不与你的组件树绑定。换句话说，它承载着全局状态。它有点像一个永远存在的组件，每个组件都可以读取和写入它。它有三个概念，state、getter 和 action，我们可以假设这些概念相当于组件中的 data、 computed 和 methods。
+
+和
+
+#### 3.3.2.1 state
+
+
+
 
 
 # 四、vue3路由
