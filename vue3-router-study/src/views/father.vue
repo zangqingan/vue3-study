@@ -13,6 +13,8 @@
       v-model:id="userInfo.id"
       v-model:name="userInfo.name"
       v-model:age="userInfo.age"></ModelChild>
+    <br />
+    <div>我是pinia传递的数据：{{ piniaMsg }}</div>
   </div>
 </template>
 
@@ -20,11 +22,27 @@
 import Child from './child.vue'
 import ModelChild from './modelChild.vue'
 
+// 引入pinia
+import { useUserStore } from '@/stores'
+const indexStore = useUserStore()
+console.log('indexStore', indexStore)
+console.log('indexStore', indexStore.a)
+console.log('indexStore', indexStore.msg)
+console.log('indexStore', indexStore.double)
+console.log('indexStore', indexStore.sum)
+// 计算属性接受
+const piniaMsg = computed(() => indexStore.msg)
 interface Member {
   id: number
   age: number
   name: string
 }
+// actions执行
+// 立即执行
+console.log(indexStore.updateMessageSync('New message by sync.'))
+
+// 3s 后执行
+indexStore.updateMessage('New message by async.').then(res => console.log(res))
 
 const userInfo: Member = reactive({
   id: 1,
