@@ -1044,7 +1044,6 @@ const message = inject('message')
 ## 3.3 全局组件通信
 所谓全局组件通信是指项目下两个任意组件，不管是否有直接关联（例如父子关系、爷孙关系）都可以直接进行交流的通信方案。
 在vue2中有eventbus和vuex，而vue3类似的也有eventbus和pinia。思想是一样的，不同在于使用方式上。
-
 ### 3.3.1 EventBus中央事件总线
 在 Vue 2 ，使用 EventBus 无需导入第三方插件，而是通过再创建一个vue实例来实现的。
 比如可以在项目下的 utils 文件夹里，创建一个名为 eventBus.ts 的文件，导出一个新的 Vue 实例即可。
@@ -1103,194 +1102,7 @@ onBeforeUnmount(() => {
 
 
 ### 3.3.2 官方插件pinia
-对比vue2，vue3官方的全局状态管理插件不再是vuex，虽然你依然可以使用它。不过不推荐现在都是使用大菠萝pinia。两者的作用和用法都比较相似，但 Pinia 的设计更贴近 Vue 3 组合式 API 的用法。
-安装：
-npm install pinia
-在入口文件引入并创建一个 pinia 实例(根 store)并将其传递给应用注册即可启用pinia
-import { createApp } from 'vue'
-import { createPinia } from 'pinia' // 导入 Pinia
-import App from '@/App.vue'
-
-createApp(App)
-  .use(createPinia()) // 启用 Pinia
-  .mount('#app')
-如此Pinia 就集成到的项目里了。
-
-pinia和vuex以及vue组件的对比
-作用	      Vue-Component	    Vuex	             Pinia
-数据管理	      data	        state	             state
-数据计算	    computed	     getters	           getters
-行为方法	     methods	   mutations/actions	   actions
-可以看到 Pinia 的结构和用途都和 Vuex 与 Component 非常相似，并且 Pinia 相对于 Vuex ，在行为方法部分去掉了 mutations （同步操作）和 actions （异步操作）的区分，更接近组件的结构，入门成本会更低一些。
-
-Store (如 Pinia) 是一个保存状态和业务逻辑的实体，它并不与你的组件树绑定。换句话说，它承载着全局状态。它有点像一个永远存在的组件，每个组件都可以读取和写入它。它有三个概念，state、getter 和 action，我们可以假设这些概念相当于组件中的 data、 computed 和 methods。也就是 state 是 store 的数据 (data)，getters 是 store 的计算属性 (computed)，而 actions 则是方法 (methods)。
-所以可以在actions里通过this.变量名的形式访问state中定义的变量。
-
-#### 3.3.2.1 Store
-Store就是仓库它是通过 defineStore 方法来创建的，它有两种入参形式：
-第一个参数是一个独一无二的名字被用作 id用来唯一标识当前仓库，是必须传入的。
-第二个参数可以与 Vue 的选项式 API 类似，传入一个带有 state、actions 与 getters 属性的 Option 对象
-语法：
-defineStore('storeName',{
-  state:{},
-  getters:{},
-  actions:{}
-})
-
-第二个参数还可以与 Vue 组合式 API 的 setup 函数相似，我们可以传入一个函数，该函数定义了一些响应式属性和方法，并且返回一个带有我们想暴露出去的属性和方法的对象。
-defineStore('storeName', () => {
-  const count = ref(0)
-  const doubleCount = computed(() => count.value * 2)
-  function increment() {
-    count.value++
-  }
-
-  return { count, doubleCount, increment }
-})
-
-第二种入参形式是直接传入一个配置对象，仓库名以id字段声明。
-export const useStore = defineStore({
-  id: 'main',
-  // Store 选项...
-})
-
-defineStore最终会返回一个仓库函数对象，可以对其进行任意命名，但最好使用 store 的名字，同时以 `use` 开头且以 `Store` 结尾。(比如 `useUserStore`，`useCartStore`，`useProductStore`)这样符合组合式函数风格的约定。使用的是 export const 而不是 export default导出也是为了在使用的时候可以和其他的 Vue 组合函数保持一致。即都是通过 import { xxx } from 'xxx' 来导入。
-
-使用：
-在需要的页面导入导出的函数对象并执行该函数，如果不执行store 实例是不会被创建的。
-import { useIndexStore } from '@/stores/index'
-const indexStore = useIndexStore()
-一旦 store 被实例化，你可以直接访问在 store 的 state、getters 和 actions 中定义的任何属性。
-
-#### 3.3.2.1 state
-Pinia 是在 state 里面定义状态数据,在 Pinia 中，state 被定义为一个返回初始状态的函数。
-为了完整类型推理，推荐使用箭头函数，同时如果不显式 return ，箭头函数的返回值需要用圆括号 () 套起来
-{
-  state: () => {
-    return {
-      // 所有这些属性都将自动推断出它们的类型
-      count: 0,
-      name: 'Eduardo',
-      isAdmin: true,
-      items: [],
-      hasChanged: true,
-    }
-  },
-  state: () => ({
-
-  })
-}
-
-对state的访问，修改，重置等操作都是响应性的，所以也不能解构不然会丢失响应式。
-store 实例化后才能访问 state，直接对其进行读写。
-用法上和 Vuex 很相似，但有一点区别是，数据直接是挂在 store 上的，而不是 store.state 上面！
-Vuex 是 store.state.message ， Pinia 是 store.messag
-
-const store = useStore()
-store.count++
-
-直接直接更新：
-store.message = 'New Message.'
-
-调用 $patch 方法更新，它允许我们使用一个 state 的补丁对象在同一时间更改多个属性：
-store.$patch({
-  count: store.count + 1,
-  age: 120,
-  name: 'DIO',
-})
-
-$patch 方法也接受一个函数来组合这种难以用补丁对象实现的变更。
-store.$patch((state) => {
-  state.items.push({ name: 'shoes', quantity: 1 })
-  state.hasChanged = true
-})
-
-在actions中定义好方法触发。
-
-而如果需要在模板中使用和vuex一样的最好定义一个计算属性接受使用。
-// 通过计算属性拿到里面的数据
-const message = computed(() => store.message)
-
-也可以像vuex里使用辅助函数一样,pinia里也可以使用 mapState() 辅助函数将 state 属性映射为只读的计算属性：
-computed: {
-  // 可以访问组件中的 this.count
-  // 与从 store.count 中读取的数据相同
-  ...mapState(useCounterStore, ['count'])
-  // 与上述相同，但将其注册为 this.myOwnName
-  ...mapState(useCounterStore, {
-    myOwnName: 'count',
-    // 你也可以写一个函数来获得对 store 的访问权
-    double: store => store.count * 2,
-    // 它可以访问 `this`，但它没有标注类型...
-    magicValue(store) {
-      return store.someGetter + this.count + this.double
-    },
-  }),
-},
-
-
-通过调用 store 的 $reset() 方法将 state 重置为初始值
-store.$reset()
-
-
-
-
-#### 3.3.2.1 getters
-Pinia 的 getters 是用来计算数据的，相当于计算属性，它依赖于state也可能会使用其他 getter。
-推荐使用箭头函数，并且它将接收 state 作为第一个参数, this 访问到整个 store 实例
-想要使用另一个 store 的 getter 的话，那就直接在 getter 内使用就好：
-
-import { useOtherStore } from './other-store'
-state: () => ({
-  count: 0,
-}),
-getters: {
-  // 自动推断出返回类型是一个 number
-  doubleCount(state) {
-    return state.count * 2
-  },
-  // 返回类型**必须**明确设置
-  doublePlusOne(): number {
-    // 整个 store 的 自动补全和类型标注 ✨
-    return this.doubleCount + 1
-  },
-  otherGetter(state) {
-    const otherStore = useOtherStore()
-    return state.localData + otherStore.data
-  },
-},
-
-使用和state一样，它也是直接挂载在store下面的，直接访问即可。
-
-
-#### 3.3.2.1 actions
-Pinia 只需要用 actions 就可以解决各种数据操作，无需像 Vuex 一样区分为 mutations / actions 两大类。
-可以为当前 Store 封装一些可以开箱即用的方法，支持同步和异步。
-类似 getter，action 也可通过 this 访问整个 store 实例，并支持完整的类型标注(以及自动补全✨)。不同的是，action 可以是异步的，你可以在它们里面 await 调用任何 API，以及其他 action！
-{
-  actions: {
-    increment() {
-      this.a++
-    },
-    // 异步更新 msg
-    async updateMessage(newMessage: string): Promise<string> {
-      return new Promise(resolve => {
-        setTimeout(() => {
-          // 这里的 this 是当前的 Store 实例
-          this.msg = newMessage
-          resolve('Async done.')
-        }, 3000)
-      })
-    },
-    // 同步更新 msg
-    updateMessageSync(newMessage: string): string {
-      // 这里的 this 是当前的 Store 实例
-      this.msg = newMessage
-      return 'Sync done.'
-    }
-  }
-}
-使用：Action 可以像函数或者通常意义上的方法一样被调用，不需要和 Vuex 一样执行 commit 或者 dispatch，在 Pinia ，不需要，不需要。
+这个单独放到vue3状态管理上
 
 
 # 四、vue3路由
@@ -1423,12 +1235,284 @@ onBeforeRouteLeave((to, from) => {
 
 
 # 五、vue3状态管理
+对比vue2，vue3官方的全局状态管理插件不再是vuex，虽然你依然可以使用它。不过不推荐现在都是使用大菠萝pinia。两者的作用和用法都比较相似，但 Pinia 的设计更贴近 Vue 3 组合式 API 的用法。
+安装：
+npm install pinia
+在入口文件引入并创建一个 pinia 实例(根 store)并将其传递给应用注册即可启用pinia
+import { createApp } from 'vue'
+import { createPinia } from 'pinia' // 导入 Pinia
+import App from '@/App.vue'
+
+createApp(App)
+  .use(createPinia()) // 启用 Pinia
+  .mount('#app')
+如此Pinia 就集成到的项目里了。
+
+pinia和vuex以及vue组件的对比
+作用	      Vue-Component	    Vuex	             Pinia
+数据管理	      data	        state	             state
+数据计算	    computed	     getters	           getters
+行为方法	     methods	   mutations/actions	   actions
+可以看到 Pinia 的结构和用途都和 Vuex 与 Component 非常相似，并且 Pinia 相对于 Vuex ，在行为方法部分去掉了 mutations （同步操作）和 actions （异步操作）的区分，更接近组件的结构，入门成本会更低一些。
+
+Store (如 Pinia) 是一个保存状态和业务逻辑的实体，它并不与你的组件树绑定。换句话说，它承载着全局状态。它有点像一个永远存在的组件，每个组件都可以读取和写入它。它有三个概念，state、getter 和 action，我们可以假设这些概念相当于组件中的 data、 computed 和 methods。也就是 state 是 store 的数据 (data)，getters 是 store 的计算属性 (computed)，而 actions 则是方法 (methods)。
+所以可以在actions里通过this.变量名的形式访问state中定义的变量。
+## 5.1 Store
+Store就是仓库它是通过 defineStore 方法来创建的，它有两种入参形式：
+第一个参数是一个独一无二的名字被用作 id用来唯一标识当前仓库，是必须传入的。
+第二个参数可以与 Vue 的选项式 API 类似，传入一个带有 state、actions 与 getters 属性的 Option 对象
+语法：
+defineStore('storeName',{
+  state:{},
+  getters:{},
+  actions:{}
+})
+
+第二个参数还可以与 Vue 组合式 API 的 setup 函数相似，我们可以传入一个函数，该函数定义了一些响应式属性和方法，并且返回一个带有我们想暴露出去的属性和方法的对象。
+defineStore('storeName', () => {
+  const count = ref(0)
+  const doubleCount = computed(() => count.value * 2)
+  function increment() {
+    count.value++
+  }
+
+  return { count, doubleCount, increment }
+})
+
+第二种入参形式是直接传入一个配置对象，仓库名以id字段声明。
+export const useStore = defineStore({
+  id: 'main',
+  // Store 选项...
+})
+
+defineStore最终会返回一个仓库函数对象，可以对其进行任意命名，但最好使用 store 的名字，同时以 `use` 开头且以 `Store` 结尾。(比如 `useUserStore`，`useCartStore`，`useProductStore`)这样符合组合式函数风格的约定。使用的是 export const 而不是 export default导出也是为了在使用的时候可以和其他的 Vue 组合函数保持一致。即都是通过 import { xxx } from 'xxx' 来导入。
+
+使用：
+在需要的页面导入导出的函数对象并执行该函数，如果不执行store 实例是不会被创建的。
+import { useIndexStore } from '@/stores/index'
+const indexStore = useIndexStore()
+一旦 store 被实例化，你可以直接访问在 store 的 state、getters 和 actions 中定义的任何属性。
+## 5.2 state
+Pinia 是在 state 里面定义状态数据,在 Pinia 中，state 被定义为一个返回初始状态的函数。
+为了完整类型推理，推荐使用箭头函数，同时如果不显式 return ，箭头函数的返回值需要用圆括号 () 套起来
+{
+  state: () => {
+    return {
+      // 所有这些属性都将自动推断出它们的类型
+      count: 0,
+      name: 'Eduardo',
+      isAdmin: true,
+      items: [],
+      hasChanged: true,
+    }
+  },
+  state: () => ({
+
+  })
+}
+
+对state的访问，修改，重置等操作都是响应性的，所以也不能解构不然会丢失响应式。
+store 实例化后才能访问 state，直接对其进行读写。
+用法上和 Vuex 很相似，但有一点区别是，数据直接是挂在 store 上的，而不是 store.state 上面！
+Vuex 是 store.state.message ， Pinia 是 store.messag
+
+const store = useStore()
+store.count++
+
+直接直接更新：
+store.message = 'New Message.'
+
+调用 $patch 方法更新，它允许我们使用一个 state 的补丁对象在同一时间更改多个属性：
+store.$patch({
+  count: store.count + 1,
+  age: 120,
+  name: 'DIO',
+})
+
+$patch 方法也接受一个函数来组合这种难以用补丁对象实现的变更。
+store.$patch((state) => {
+  state.items.push({ name: 'shoes', quantity: 1 })
+  state.hasChanged = true
+})
+
+在actions中定义好方法触发。
+
+而如果需要在模板中使用和vuex一样的最好定义一个计算属性接受使用。
+// 通过计算属性拿到里面的数据
+const message = computed(() => store.message)
+
+也可以像vuex里使用辅助函数一样,pinia里也可以使用 mapState() 辅助函数将 state 属性映射为只读的计算属性：
+computed: {
+  // 可以访问组件中的 this.count
+  // 与从 store.count 中读取的数据相同
+  ...mapState(useCounterStore, ['count'])
+  // 与上述相同，但将其注册为 this.myOwnName
+  ...mapState(useCounterStore, {
+    myOwnName: 'count',
+    // 你也可以写一个函数来获得对 store 的访问权
+    double: store => store.count * 2,
+    // 它可以访问 `this`，但它没有标注类型...
+    magicValue(store) {
+      return store.someGetter + this.count + this.double
+    },
+  }),
+},
+
+
+通过调用 store 的 $reset() 方法将 state 重置为初始值
+store.$reset()
+## 5.3 getters
+Pinia 的 getters 是用来计算数据的，相当于计算属性，它依赖于state也可能会使用其他 getter。
+推荐使用箭头函数，并且它将接收 state 作为第一个参数, this 访问到整个 store 实例
+想要使用另一个 store 的 getter 的话，那就直接在 getter 内使用就好：
+
+import { useOtherStore } from './other-store'
+state: () => ({
+  count: 0,
+}),
+getters: {
+  // 自动推断出返回类型是一个 number
+  doubleCount(state) {
+    return state.count * 2
+  },
+  // 返回类型**必须**明确设置
+  doublePlusOne(): number {
+    // 整个 store 的 自动补全和类型标注 ✨
+    return this.doubleCount + 1
+  },
+  otherGetter(state) {
+    const otherStore = useOtherStore()
+    return state.localData + otherStore.data
+  },
+},
+
+使用和state一样，它也是直接挂载在store下面的，直接访问即可。
+## 5.4 actions
+Pinia 只需要用 actions 就可以解决各种数据操作，无需像 Vuex 一样区分为 mutations / actions 两大类。
+可以为当前 Store 封装一些可以开箱即用的方法，支持同步和异步。
+类似 getter，action 也可通过 this 访问整个 store 实例，并支持完整的类型标注(以及自动补全✨)。不同的是，action 可以是异步的，你可以在它们里面 await 调用任何 API，以及其他 action！
+{
+  actions: {
+    increment() {
+      this.a++
+    },
+    // 异步更新 msg
+    async updateMessage(newMessage: string): Promise<string> {
+      return new Promise(resolve => {
+        setTimeout(() => {
+          // 这里的 this 是当前的 Store 实例
+          this.msg = newMessage
+          resolve('Async done.')
+        }, 3000)
+      })
+    },
+    // 同步更新 msg
+    updateMessageSync(newMessage: string): string {
+      // 这里的 this 是当前的 Store 实例
+      this.msg = newMessage
+      return 'Sync done.'
+    }
+  }
+}
+使用：Action 可以像函数或者通常意义上的方法一样被调用，不需要和 Vuex 一样执行 commit 或者 dispatch，在 Pinia ，不需要，不需要。
+
 
 # 六、vue3插件
+## 6.1 vue专属插件
+插件 (Plugins) 是一种能为 Vue 添加全局功能的工具代码。通过 Vue Plugins 设计规范 开发出来的插件，在 npm 上通常是以 vue-xxx 这样带有 vue 关键字的格式命名。比如官方路由 vue-router等等。一般放在plugins目录下。
+vue3依然使用vue实例的use()方法注册插件，一般是初始化为全局插件。
+一个插件可以是一个拥有 install() 方法的对象，也可以直接是一个安装函数本身。
+安装函数会接收到安装它的应用实例和传递给 app.use() 的额外选项作为参数。
+这是因为 use()方法就是接受两个参数的。
+参数一：plugin	object | function	插件，一般是在 import 时使用的名称
+参数二：options	object	插件的参数，有些插件在初始化时可以配置一定的选项
+
+
+插件没有严格定义的使用范围，但是插件发挥作用的常见场景主要包括以下几种：
+  通过 app.component() 和 app.directive() 注册一到多个全局组件或自定义指令。
+  通过 app.provide() 使一个资源可被注入进整个应用。
+  向 app.config.globalProperties 中添加一些全局实例属性或方法
+  一个可能上述三种都包含了的功能库 (例如 vue-router)。
+
+而声明Vue 插件的时候，需要遵循 Vue 官方撰写的 Vue Plugins 设计规范 ，并且做好必要的代码注释，除了标明插件 API 的 “用途、入参、返回值” 之外，最好在注释内补充一个 Example 或者 Tips 说明，功能丰富的插件最好直接写个 README 文档。
+例如：
+myPlugin.ts
+// 对象格式
+export default const myPlugin = {
+  install(app, options) {
+    // 配置此应用
+  }
+}
+
+// 函数格式，Vue 会直接调用这个函数
+
+export default function (app, options) {
+  // 逻辑代码...
+}
+
+
+## 6.2 通用插件
+通用插件它是针对具体的业务，或者涉及到一些经常用到的功能模块，也是可以抽离出来封装成项目专用的插件。
+其实就是封装的工具类方法了，比较常见的如验证类的方法可以统一封装一下。一般放在utils目录或者libs目录下。
+而通用插件可以用时导入也可以全局注册，即将其挂载到 Vue 上，使其成为 Vue 的全局变量。
+一般是对于一些使用频率比较高的插件方法挂载，少数几个页面使用就没必要全局挂载了。
+因为如果在整个应用中使用不同插件注入的太多全局属性，很容易让应用变得难以理解和维护。
+
+在 Vue 2 ，可以通过 prototype 的方式来挂载全局变量，然后通过 this 关键字来从 Vue 原型上调用该方法。
+Vue.prototype.$md5 = md5
+访问
+const md5Msg = this.$md5('message')
+
+而在vue3中，已经不再支持 prototype 这样使用了，在 main.ts 里没有了 Vue，在组件的生命周期里也没有了 this。
+
+如果依然想要挂载全局变量，需要挂载在vue实例对象的 config对象的globalProperties 属性上来实现。
+globalProperties是一个用于注册能够被应用内所有组件实例访问到的全局属性的对象。也就是说添加到这个对象上的属性或方法能被应用内的所有组件访问到。
+注意：如果全局属性与组件自己的属性冲突，组件自己的属性将具有更高的优先级。
+同时在 Vue 3 实际上并不是特别推荐使用全局变量，Vue 3 比较推荐按需引入使用，这也是在构建过程中可以更好的做到代码优化。
+
+// 把插件的 API 挂载全局变量到实例上
+app.config.globalProperties.$md5 = md5
+// 也可以自己写一些全局函数去挂载
+app.config.globalProperties.$log = (text: string): void => {
+  console.log(text)
+}
+
+只能说尽力不使用，确实需要全局api啥的可以在入口文件就依赖注入，或者pinia。
 
 # 七、vue3综合练习 vue3-synthesize-practise
 
+# 八、其它
+
+## 8.1 高效开发
+vue3进入3.2版本使用 setup语法糖之后可以说是真香了。
+它是为了让熟悉 Vue 3 的开发者可以更高效率地开发组件，减少编码过程中的心智负担，只需要给 script / 标签添加一个 setup 属性，那么整个 script 就直接会变成 setup 函数，所有顶级变量、函数，均会自动暴露给模板使用无需再一个个 return 了。脚手架帮我们做了。
+
+在 script-setup 模式下，新增了 4 个全局编译器宏，他们无需 import 就可以直接使用。
+也就是我们之前说的：defineProps、defineEmits、defineExpose、withDefaults
+它们分别用于props 的声明接收，emits事件的声明发射，组件要向外暴露的属性和方法，ts时带默认值的props。
+
+两个辅助函数：useSlots() 和 useAttrs()
+在 script setup 使用 slots 和 attrs 的情况应该是相对来说较为罕见的，因为可以在模板中直接通过 $slots 和 $attrs 来访问它们。如果需要就使用这两个辅助函数。
+
+// 获取 attrs
+const attrs = useAttrs()
+// attrs 是个对象，和 props 一样，需要通过 `key` 来得到对应的单个 attr
+console.log(attrs.msg)
+
+同时 script标签中声明变量无需进行 return,因为所有数据只是默认隐式 return 给模板使用，不会暴露到组件外，所以父组件是无法直接通过挂载 ref 变量获取子组件的数据。子组件需要使用defineExpose宏显式声明暴露出去。
+子组件引入后无需手动注册，即可在模板中使用。
+
+## 8.2 命名技巧
+在工作中，很多开发团队都会有语义化命名的规范要求，严格的团队会有 Code Review 环节，使用无意义命名的代码将无法通过审查。所以命名规范时很关键的，当然每个公司都不一样，个人习惯也不一样。
+进入公司后应该先找公司的标准，然后是vue官方推荐的，然后是自己的爱好习惯。
+无所谓大驼峰 UpperCamelCase 还是小驼峰 lowerCamelCase 还是 kebab-case 短横线风格，或者是 snake_case 下划线风格其实都是可以的。关键是要统一规定好。
+
+vue 组件命名规范
+全局通用组件 -- @/components 目录下，使用大驼峰。
+业务路由页面组件 -- @/views 目录下的，使用 kebab-case 短横线风格
 
 
 
+## 8.1 高效开发
+## 8.1 高效开发
 

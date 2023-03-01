@@ -15,6 +15,20 @@
       v-model:age="userInfo.age"></ModelChild>
     <br />
     <div>我是pinia传递的数据：{{ piniaMsg }}</div>
+    <br />
+    <h1>{{ $translate('greetings.hello') }}</h1>
+    <br />
+    <!-- 测试 permission 指令 -->
+    <div>根据 permission 指令的判断规则：</div>
+    <div v-permission="1">这个可以显示</div>
+    <div v-permission="2">这个没有权限，会被隐藏</div>
+
+    <!-- 测试 highlight 指令 -->
+    <div>根据 highlight 指令的判断规则：</div>
+    <div v-highlight="`cyan`">这个是青色高亮</div>
+    <div v-highlight="`yellow`">这个是黄色高亮</div>
+    <div v-highlight="`red`">这个是红色高亮</div>
+    <div v-highlight>这个是使用插件初始化时设置的灰色</div>
   </div>
 </template>
 
