@@ -1,9 +1,18 @@
 {
   "extends": "@vue/tsconfig/tsconfig.web.json",
-  // 添加element-plus 自动导入的类型检查
-  "include": ["env.d.ts", "src/**/*", "src/**/*.vue", "auto-imports.d.ts", "components.d.ts" ],
+  "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
   "compilerOptions": {
     "baseUrl": ".",
+    "target": "esnext",
+    "useDefineForClassFields": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "strict": true,
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "types": ["element-plus/global"],
     "paths": {
       "@/*": ["./src/*"]
     }
