@@ -7,6 +7,9 @@
       <div class="item bg-warning mx-1 px-1 text-center">盒子3</div>
       <div class="item bg-success mx-1 text-black">盒子4</div>
       <div class="item bg-danger ml-1 pr-2 text-right">盒子5</div>
+      <el-icon>
+        <i-ep-user></i-ep-user>
+      </el-icon>
     </div>
     <RouterView />
   </el-config-provider>

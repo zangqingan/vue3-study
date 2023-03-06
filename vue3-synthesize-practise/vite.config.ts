@@ -4,6 +4,8 @@ import vue from '@vitejs/plugin-vue'
 import EslintPlugin from 'vite-plugin-eslint'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
+import Icons from 'unplugin-icons/vite'
+import IconsResolver from 'unplugin-icons/resolver'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 // mock
 import { viteMockServe } from 'vite-plugin-mock'
@@ -41,19 +43,37 @@ export default defineConfig({
       exclude: ['./node_modules']
     }),
     AutoImport({
+      // 自动导入 Vue 和vue-router 相关函数，如：ref, reactive, toRef 等
       imports: ['vue', 'vue-router'],
       eslintrc: {
         enabled: false, // Default `false`需要注意的是，一旦生成配置文件之后，最好把改成false。否则这个文件每次会在重新加载的时候重新生成，这会导致eslint有时会找不到这个文件。
         filepath: './.eslintrc-auto-import.json',
         globalsPropValue: true // Default `true`, (true | false | 'readonly' | 'readable' | 'writable' | 'writeable')
       },
-      resolvers: [ElementPlusResolver()],
+      resolvers: [
+        // 自动导入 Element Plus 相关函数，如：ElMessage, ElMessageBox... (带样式)
+        ElementPlusResolver(),
+        // 自动导入图标组件
+        IconsResolver({
+          prefix: 'Icon'
+        })
+      ],
       dts: './src/types/auto-imports.d.ts' // 指定类型声明文件，为true时在项目根目录创建
     }),
     Components({
-      resolvers: [ElementPlusResolver()],
+      resolvers: [
+        // 自动导入 Element Plus 组件
+        ElementPlusResolver(),
+        // 自动注册图标组件
+        IconsResolver({
+          enabledCollections: ['ep']
+        })
+      ],
       directoryAsNamespace: true, // 组件名称包含目录，防止同名组件冲突
       dts: './src/types/components.d.ts' // 指定类型声明文件，为true时在项目根目录创建
+    }),
+    Icons({
+      autoInstall: true
     })
   ],
   resolve: {
