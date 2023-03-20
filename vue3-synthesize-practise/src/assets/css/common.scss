@@ -17,6 +17,10 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+// 鼠标小手
+.pointer {
+  cursor: pointer;
+}
 // 清除浮动
 .clearfix {
   &:after {

@@ -2,7 +2,13 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes: []
+  routes: [
+    {
+      path: '/',
+      name: 'Home',
+      component: () => import('@/components/Layout/CommonLayout.vue')
+    }
+  ]
 })
 // 全局路由导航守卫的方法跟vue2中的vue-router一样
 // 全局前置路由守卫
