@@ -87,6 +87,7 @@ export default defineConfig({
     assetsDir: 'static',
     minify: 'terser', // 使用terser压缩加密
     sourcemap: true,
+    // 生产环境去除 console debugger
     terserOptions: {
       compress: {
         drop_console: true,
@@ -104,6 +105,7 @@ export default defineConfig({
   },
   css: {
     preprocessorOptions: {
+      // 全局scss文件挂载
       scss: {
         additionalData: "@import './src/assets/css/_variables.scss';"
       }
