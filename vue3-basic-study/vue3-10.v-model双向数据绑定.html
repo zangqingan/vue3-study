@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://unpkg.com/vue@3.3.4/dist/vue.esm-browser.prod.js"></script>
+    <title>vue3-10.v-model双向数据绑定</title>
+    <style type="text/css">
+      #app {
+        padding-bottom: 100px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h3>1. 概述</h3>
+      <div>
+        我们知道使用v-model指令可以在表单输入元素或组件上创建双向绑定。即用户修改了值会自动更新到视图上。<br />
+        注意:只能用在input元素、select元素、textarea元素、components(vue组件)这四个上。<br />
+        v-model指令其实一个语法糖,它是对v-bind
+        和v-on命令的封装。实现原理如下:<br />
+        1. 对于文本类型的 input(也就是输入框) 和 textarea 元素会绑定 value
+        property 并侦听 input 事件。 <br />
+        2. 对于单选、多选框会绑定 checked property 并侦听 change 事件。 <br />
+        3. 对于下拉框select会绑定 value property 并侦听 change 事件。 <br />
+        对于输入框来说绑定的都是 value属性的值,对于下拉框则是下拉选项option
+        value属性的值。<br />
+        在实际项目里下拉框的下拉选项一般都是使用v-for指令循环渲染出来的。<br />
+        对于单选按钮,复选框和选择器选项,v-model 绑定的值通常是静态的字符串
+        (或者对复选框是布尔值)
+        但是如果希望这些表单控件元素的value属性绑定到当前组件实例上的动态数据,可以使用v-bind指令绑定即可。
+      </div>
+      <hr />
+      <b>1. 普通输入框input和文本域textarea,v-bind 和v-on指令实现双向绑定</b
+      ><br />
+      <input type="text" :value="text" @input="handleInput" />
+      <p>输入框输入的值同步改变:{{text}}</p>
+      <textarea
+        :value="areatext"
+        @input="handleTextareaInput"
+        rows="5"
+        cols="33"
+      >
+      </textarea>
+      <p>文本域输入的值同步改变:{{areatext}}</p>
+      <b>2. v-model 指令简化操作</b><br />
+      <h6>输入框</h6>
+      <input v-model="modelText" type="text" />
+      <p>v-model 指令绑定值同步改变:{{modelText}}</p>
+
+      <h6>文本域</h6>
+      <p>注意在 textarea中是不支持插值表达式的。请使用 v-model 来替代</p>
+      <textarea v-model="areatext" rows="5" cols="33"> </textarea>
+      <p>文本域输入的值同步改变:{{areatext}}</p>
+
+      <h6>单选按钮</h6>
+      <div>选中的性别是: {{ picked }}</div>
+      <input type="radio" id="one" value="male" v-model="picked" />
+      <label for="one">男</label>
+      <input type="radio" id="two" value="female" v-model="picked" />
+      <label for="two">女</label>
+
+      <h6>复选框</h6>
+      <b>只有一个选项的单一复选框,绑定的是布尔类型值</b><br />
+      <input type="checkbox" id="checkbox" v-model="checked" />
+      <label for="checkbox">{{ checked }}</label><br />
+      <b>而多个复选框则绑定到同一个数组或集合的值</b><br />
+      <div>Checked names: {{ checkedNames }}</div>
+      <input type="checkbox" id="jack" value="Jack" v-model="checkedNames" />
+      <label for="jack">Jack</label>
+      <input type="checkbox" id="john" value="John" v-model="checkedNames" />
+      <label for="john">John</label>
+      <input type="checkbox" id="mike" value="Mike" v-model="checkedNames" />
+      <label for="mike">Mike</label>
+
+      <h6>下拉选择器</h6>
+      <div>Selected: {{ selected }}</div>
+      <select v-model="selected">
+        <option disabled value="">Please select one</option>
+        <option>A</option>
+        <option>B</option>
+        <option>C</option>
+      </select>
+      <br />
+      <div>v-for遍历option选项: {{ selected}}</div>
+      <select v-model="selected">
+        <option
+          v-for="option in options"
+          :key="option.value"
+          :value="option.value"
+        >
+          {{ option.text }}
+        </option>
+      </select>
+      <hr />
+      <h3>2. 修饰符</h3>
+      <div>
+        是的你没看错,除了事件处理指令v-on。双向数据绑定v-model指令也是有修饰符的,而且非常常用。<br />
+        3个: .trim ==>在 v-model 后添加 .trim
+        修饰符就可以自动去除用户输入内容中两端的空格。v-model.trim .number ==>在
+        v-model 后添加 .number 修饰符让用户输入内容自动转换为数字。 .lazy ==>
+        用来改变v-model更新数据的时机,默认情况下,v-model 会在每次 input
+        事件触发后更新数据,添加 lazy 修饰符来改为在每次 change
+        事件触发后更新数据。
+      </div>
+      <h3>3. 组件上使用v-model</h3>
+      <div>详见组件一章。</div>
+    </div>
+    <script type="module">
+      import { createApp } from "https://unpkg.com/vue@3.3.4/dist/vue.esm-browser.prod.js";
+      import BasicComponent from "./js/basicComponent.js";
+      const app = createApp(BasicComponent);
+      app.mount("#app");
+    </script>
+  </body>
+</html>

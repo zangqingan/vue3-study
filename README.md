@@ -1,9 +1,10 @@
-# vue3-study
+# 项目概述
 
 vue3 全家桶的学习
 vue3 依然是渐进式 JavaScript 框架，可以像 vue2 一样渐进式学习，但是没有必要。
 因为在 vue3.2 之后，使用了 setup 语法糖，使得编写 vue 项目代码更加方便快捷。
 基础语法还是单独学习，但是组件开始都是使用最新脚手架 vite 构建项目学习。
+这个仓库 js 和 ts 都会使用到。
 在 2022 年 2 月 7 日， Vue 3 代替了 Vue 2 成为 Vue 的默认版本
 也就是说现在使用命令：npm i vue 默认安装的是 vue3 了，而不用像之前一样指定 vue@next。
 此时如需要安装 2.x 的版本使用如下命令
@@ -11,23 +12,41 @@ vue3 依然是渐进式 JavaScript 框架，可以像 vue2 一样渐进式学习
 安装 2.7.x 的最新版本：npm i vue@v2-latest
 vue2.0 版本一般是使用的 2.6.x 版本的，因为 2.7 是在 vue2 的基础上增加了对标 vue3 的内容。
 
-# 一、vue3 项目的创建
+# 一、vue 框架概述
 
-## 1.1 使用 npm 创建项目
+## 1.1 vue.js 是什么
+
+Vue (发音为 /vjuː/，类似 view)是一个用于构建用户界面的、渐进式的 JavaScript 框架，它基于标准 HTML、CSS 和 JavaScript 构建，并提供了一套声明式的、组件化的编程模型，能帮助用户高效地开发用户界面。
+Vue 的两个核心功能：
+声明式渲染：指 Vue 基于标准 HTML 拓展了一套模板语法，使得我们可以声明式地描述最终输出的 HTML 和 JavaScript 状态之间的关系。
+响应性：指 Vue 会自动跟踪 JavaScript 状态并在其发生变化时响应式地更新 DOM。
+
+它具有易学易用、性能出色、灵活多变 3 个特点。
+易学易用：是因为 vuejs 基于标准 HTML、CSS 和 JavaScript 构建，提供容易上手的 API 和一流的文档。
+性能出色：是因为 vuejs 经过编译器优化、完全响应式的渲染系统，几乎不需要手动优化。
+灵活多变：是因为 vuejs 有着丰富的、可渐进式集成的生态系统，可以根据应用规模在库和框架间切换自如。
+库是一个小的插件就跟以前的 jQuery 一样，我们学习 vue 的基础语法时使用 script 标签直接通过 CDN 来使用 Vue 此时它就是一个库。
+而框架是一整套解决方案,根据项目需求可以添加路由、状态管理库、网络请求库等等这时它就是一个框架。而这也是渐进式的由来。
+
+## 1.2 创建 vue 项目
+
+### 1.2.1 使用 npm
 
 vite 是 vue 作者开发的一个新的构建工具，使用它就可以创建 vite 项目。
 语法：npm create vite@latest
-即可创建一个基于 Vite 的最基础的项目，类似之前 vuecli 最基础的模板，只安装了 vue。
-如果需要用到 Router 、 Vuex 、 ESLint 等程序，都需要再单独安装和配置。
+即可创建一个基于 Vite 的最基础的项目，类似之前 vuecli 最基础的模板，它只安装了 vue。
+如果需要用到 eslint、 Router 、 Vuex 、 ESLint 等程序，都需要再单独安装和配置。
 
-也可以在选择 variant 时选择 create-vue，create-vue 算是 Vue 官方推出的一个新脚手架，用以代替基于 Webpack 的 Vue CLI ，它可以创建基于 Vite 的 Vue 基础模板，可以选择是否安装路由，pinia，eslint 等。按照提示选择需要的即可。
-
-还可以使用：npm init vue@latest 命令，这一指令将会安装并执行 create-vue。
+也可以在选择 variant 时选择 create-vue，create-vue 算是 Vue 官方推出的一个新脚手架，用以代替基于 Webpack 的 Vue CLI ，它可以创建基于 Vite 的 Vue 基础模板，可以选择是否安装路由，pinia，eslint 等。按照提示选择需要的即可。这种选择也可以直接使用命令安装：npm init vue@latest 命令，这一指令将会安装并执行 create-vue。
 
 项目的创建方式是多种多样的，不必纠结选择那种，完全可以自己手动从零搭建需要什么包安装什么包。
-不论使用哪种方式创建项目，在项目的根目录下都会有一个名为 vite.config.js 或 vite.config.ts 的项目配置文件里面会有一些预设好的配置。实际开发中需要到什么 vite 官网查看即可。这个文件就跟 vuecli 创建的 vue2.x 项目的 vue.config.js 的作用一样的。
+不论使用哪种方式创建项目，在项目的根目录下都会有一个名为 vite.config.js 或 vite.config.ts 的项目配置文件里面会有一些预设好的配置。实际开发中需要到什么 vite 官网查看配置即可。这个文件就跟 vuecli 创建的 vue2.x 项目的 vue.config.js 的作用一样的。
 
-## 1.2 使用@vue/cli 创建项目
+所以到了 vue3，可以使用两种方法创建基于 vite 的 vue3 项目，
+一个是最基础的版本：npm create vite@latest
+一个是可选配置的版本：npm init vue@latest
+
+### 1.2.2 使用@vue/cli 创建项目
 
 如果不习惯 vite，依然是可以使用 vue2.x 时的脚手架 vuecli 的。
 注意如果需要使用它创建 vue3 项目，脚手架最低版本要求在 4.5.6。
@@ -114,6 +133,9 @@ ESLint for VSCode:这是 ESLint 在 VSCode 的一个扩展， TypeScript 项目�
 其它需要的插件可以在 vscode 的插件市场里查看https://marketplace.visualstudio.com/
 
 # 二、vue 项目版本的比对
+
+vue2 版本升级到 vue3 之后，开发思路其实是没变的。下面是罗列的一个不同之处。
+可以说 vue3 更加的方便、直观、友好。
 
 ## 2.1 入口文件的区别
 

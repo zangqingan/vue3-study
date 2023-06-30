@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://unpkg.com/vue@3.3.4/dist/vue.esm-browser.prod.js"></script>
+    <title>vue3-9.事件处理</title>
+    <style type="text/css"></style>
+  </head>
+  <body>
+    <div id="app">
+      <h3>1. 概述</h3>
+      <div>
+        在vue中可以使用 v-on 指令 (简写为 @) 来监听 原生DOM
+        事件或者组件自定义事件，并在事件触发时执行对应的
+        JavaScript。用法：v-on:click="handler" 或 @click="handler"。<br />
+        <b>事件处理器 (handler) 的值可以是</b><br />
+        <p>
+          1.内联事件处理器：事件被触发时执行的内联 JavaScript 语句 (与 onclick
+          类似)。常用于比较简单的场景，实际项目经常用到的是在内联事件处理器中调用方法，这样可以向方法传入自定义参数。<br />
+          在内联事件处理器中访问原生 DOM
+          事件。你可以向该处理器方法传入一个特殊的 $event
+          变量，或者使用内联箭头函数：
+          2.方法事件处理器：直接绑定一个指向组件上定义的方法的属性名或是路径。<br />
+          其中第二种方式使用的较多，在组件中定义一个函数接收。
+          这时是默认传入浏览器事件模型对象 $event的。
+        </p>
+        <pre>
+          const count = ref(0)
+          button @click="count++">Add 1/button
+          p>Count is: \{\{ count \}\}/p
+
+          // 使用特殊的 $event 变量 访问原生DOM
+          button @click="warn('Form cannot be submitted yet.', $event)">
+            Submit
+          /button>
+
+          // 使用内联箭头函数
+          button @click="(event) => warn('Form cannot be submitted yet.', event)">
+            Submit
+          /button>
+        </pre>
+      </div>
+      <hr />
+      <p>1. 内联事件处理器: 用于简单场景</p>
+      <button @click="count++">Add 1</button>
+      <button @click="count--">Decrease 1</button>
+      <p>Count is: {{ count }}</p>
+      <br />
+      <p>1. 内联事件处理器: 调用方法</p>
+      <button @click="say('hello')">Say hello</button>
+      <button @click="say('bye')">Say bye</button>
+      <br />
+      <p>2. 方法事件处理器: 用于复杂场景</p>
+      <button @click="greet">Greet</button>
+      <hr />
+      <h3>2. 修饰符</h3>
+      <div>
+        在处理事件时调用 event.preventDefault() 或 event.stopPropagation()
+        阻止默认行为和冒泡是很常见的。<br />
+        而vue为 v-on指令提供了事件修饰符，让我们更专注于数据逻辑而不用去处理 DOM
+        事件的细节。<br />
+        修饰符是用 . 表示的指令后缀,常见如下： .stop .prevent .self .capture
+        .once .passive<br />
+        修饰符可以链式调用，不过要注意调用顺序。
+        <pre>
+          // 单击事件将停止传递
+          a @click.stop="doThis">/a>
+
+          // 提交事件将不再重新加载页面
+          form @submit.prevent="onSubmit">/form>
+
+          // 修饰语可以使用链式书写
+          a @click.stop.prevent="doThat">/a>
+
+          // 也可以只有修饰符
+          form @submit.prevent>/form>
+
+          // 仅当 event.target 是元素本身时才会触发事件处理器
+          div @click.self="doThat">.../div>
+
+          // 添加事件监听器时，使用 `capture` 捕获模式 
+          // 例如：指向内部元素的事件，在被内部元素处理前，先被外部处理
+          div @click.capture="doThis">.../div>
+
+          // 点击事件最多被触发一次
+          a @click.once="doThis">/a>
+
+          // 滚动事件的默认行为 (scrolling) 将立即发生而非等待 `onScroll` 完成
+          // 以防其中包含 `event.preventDefault()
+          // 一般用于触摸事件的监听器，可以用来改善移动端设备的滚屏性能。
+          div @scroll.passive="onScroll">.../div>
+        </pre>
+      </div>
+    </div>
+    <script type="module">
+      import { createApp } from "https://unpkg.com/vue@3.3.4/dist/vue.esm-browser.prod.js";
+      import BasicComponent from "./js/basicComponent.js";
+      const app = createApp(BasicComponent);
+      app.mount("#app");
+    </script>
+  </body>
+</html>

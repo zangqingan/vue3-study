@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://unpkg.com/vue@3.3.4/dist/vue.esm-browser.prod.js"></script>
+    <title>vue3-7.条件渲染</title>
+    <style type="text/css"></style>
+  </head>
+  <body>
+    <div id="app">
+      <h3>1. 概述</h3>
+      <div>
+        从模板语法里我们可以知道：vue条件渲染有真条件渲染v-if和假条件渲染v-show两种，在实际开发中可以说两者都算比较常用的。
+        v-if/v-else-if/v-else
+        其实和JavaScript里的if语句是类似的,而v-show就是css的display属性实现的。
+      </div>
+      <h3>2. v-if</h3>
+      <div>
+        v-if
+        指令用于条件性地渲染一块内容。这块内容只会在指令的表达式返回真值时才被渲染。<br />
+        它后面可以添加 一个或多个“else if 区块”，也就是v-else-if
+        指令。它可以连续多次重复使用，不过要注意的是必须它必须紧跟在一个 v-if
+        或一个 v-else-if 元素后面。<br />
+        它后面也可以只添加一个“else 区块”，也就是 v-else
+        指令。它只能使用一次，而且必须紧跟在一个 v-if 或者 v-else-if
+        元素后面，否则它将不会被识别。<br />
+        v-if指令是必须依附于某个元素的，当它想要切换一组元素时，可以用template元素包裹这组元素。
+        然后在template元素上使用v-if即可,
+        template元素只是一个不可见的包装器元素起到一个容器包裹作用，最后渲染的结果并不会包含这个
+        template 元素。v-if/v-else-if/v-else 都可以在这个元素上使用。<br />
+        注意：v-if/v-else-if 指令接收的值会被做类型隐式转换,自动计算出值得真假。
+      </div>
+      <hr />
+      <h1 v-if="awesome">Vue is awesome!</h1>
+      <h1 v-else>Oh no 😢</h1>
+      <button @click="awesome = !awesome">切换h1显示内容</button>
+      <div v-if="type === 'A'">A</div>
+      <div v-else-if="type === 'B'">B</div>
+      <div v-else-if="type === 'C'">C</div>
+      <div v-else>Not A/B/C</div>
+      <br />
+      <hr />
+      <h3>3. v-show</h3>
+      <div>
+        v-show是另一个可以用来按条件显示一个元素的指令，用法基本一样。不同之处在于
+        v-show 会在 DOM 渲染中保留该元素；v-show 仅切换了该元素上名为 display 的
+        CSS 属性。也就是并没有真的移除dom。<br />
+        注意：v-show 不支持在 template 元素上使用，也不能和 v-else-if/v-else
+        搭配使用。
+      </div>
+      <hr />
+      <h1 v-show="ok">Hello!,我是用v-show指令渲染的</h1>
+      <hr />
+      <h3>4. v-if vs v-show</h3>
+      <div>
+        相同点：都能显示隐藏某个元素。<br />
+        不同点：<br />1. v-if能在template元素上使用，也能和v-else-if/v-else
+        搭配使用，而v-show不能。<br />
+        2.
+        v-if是惰性的,只有初始条件为true时才会被渲染,而v-show不管初始条件如何都会被渲染<br />
+        3. v-if
+        是“真实的”按条件渲染元素会被销毁与重建，而v-show不会只是css的display属性被切换。<br />
+        4. v-if 有更高的切换开销，而 v-show 有更高的初始渲染开销。
+        因此，如果需要频繁切换，则使用 v-show
+        较好；如果在运行时绑定条件很少改变，则 v-if 会更合适。
+      </div>
+    </div>
+    <script type="module">
+      import { createApp } from "https://unpkg.com/vue@3.3.4/dist/vue.esm-browser.prod.js";
+      import BasicComponent from "./js/basicComponent.js";
+      const app = createApp(BasicComponent);
+      app.mount("#app");
+    </script>
+  </body>
+</html>
