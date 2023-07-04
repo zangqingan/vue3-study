@@ -1,30 +1,36 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
+import { ref, provide } from "vue";
+import HelloWorld from "./components/HelloWorld.vue";
+// 监听子组件发射事件
+const data = ref({});
+const handleSubmit = (payload) => {
+  console.log("payload", payload);
+  data.value = payload;
+};
+
+// 依赖注入
+provide("app", "app组件依赖注入的值");
 </script>
 
 <template>
   <div>
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
+    <h3>我是父组件的内容</h3>
+    <div>
+      我是子组件传递出来的数据：姓名---{{ data.name }}---年龄{{ data.age }}
+    </div>
   </div>
-  <HelloWorld msg="Vite + Vue" />
+  <hr />
+  <HelloWorld
+    msg="Vite + Vue"
+    component-type="detail"
+    flag="haha"
+    @submit="handleSubmit"
+  />
 </template>
 
 <style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
+#app {
+  width: 100%;
+  height: 100%;
 }
 </style>
