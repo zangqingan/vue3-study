@@ -2,6 +2,7 @@
 // 引入 要双向数据绑定的组件
 import MyComponent from "./MyComponent.vue";
 import { ref, computed, provide, inject } from "vue";
+import { useMouseTrack } from "../hooks/useMouse.js";
 // 定义props
 const props = defineProps({
   msg: String,
@@ -32,9 +33,14 @@ const helloText = ref("hello word");
 // 依赖注入
 const result = inject("app");
 provide("hello", helloText);
+
+// hooks
+const { x, y } = useMouseTrack();
 </script>
 
 <template>
+  <h3>下面是通过组合式函数的形式获取的鼠标位置</h3>
+  <div>鼠标位置是：{{ x }} ---{{ y }}</div>
   <h3>{{ msg }}</h3>
   <div>组件类型是：{{ componentType }}</div>
   <div>计算属性基于props: {{ normalizedSize }}</div>

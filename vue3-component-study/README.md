@@ -540,8 +540,303 @@ provide(myInjectionKey, { /*
 */ });
 ```
 
-## 3.6 异步组件
+## 3.6 动态组件
+
+有些场景会需要在两个组件间来回切换，比如 Tab 界面。这时可以通过 Vue 的特殊元素 component 元素和它特殊的 is attribute 来实现。组件间作切换时，被切换掉的组件会被卸载。如果需要保存切换组件的状态可以通过使用内置组件 keepAlive 强制被切换组件保持“存活”的状态。
+
+```
+<!-- currentTab 改变时组件也改变 -->
+<component :is="tabs[currentTab]"></component>
+const currentTab = ref('tab1')
+
+const tabs = {
+  tab1,
+  tab2,
+  ...
+}
+
+```
+
+## 3.7 异步组件
 
 暂时没用过
 
 # 四、逻辑复用
+
+我们知道页面复用通过组件实现、而如果功能逻辑上有复用可以通过：组合式函数(hooks)、自定义指令、插件三者实现。
+
+## 4.1 组合式函数(hooks)
+
+### 4.1.1 概述
+
+在 Vue 应用的概念中，“组合式函数”(Composables) 就是一个利用 Vue 的组合式 API 来封装和复用有状态逻辑的函数。本质也是一个函数，只不过它利用了 vue3 的组合式 api。
+比如：当构建前端应用时，我们常常需要复用公共任务的逻辑。例如为了在不同地方格式化时间，我们可能会抽取一个可复用的日期格式化函数。这个函数封装了无状态的逻辑：它在接收一些输入后立刻返回所期望的输出。和在组件中一样，你也可以在组合式函数中使用所有的组合式 API。一个组合式函数也可以调用一个或多个其他的组合式函数。这使得我们可以像使用多个组件组合成整个应用一样，用多个较小且逻辑独立的单元来组合形成复杂的逻辑。而这也是组合式 api 命名的由来。
+
+### 4.1.2 示例
+
+1. 一个鼠标追踪器示例，
+   就是如果我们需要知道鼠标在页面的实时位置。在组件中使用组合式 API 实现鼠标跟踪功能它会是如下所示：
+
+```
+// mouse.vue
+<script setup>
+import { ref, onMounted, onUnmounted } from 'vue'
+
+const x = ref(0)
+const y = ref(0)
+
+function update(event) {
+  x.value = event.pageX
+  y.value = event.pageY
+}
+
+onMounted(() => window.addEventListener('mousemove', update))
+onUnmounted(() => window.removeEventListener('mousemove', update))
+</script>
+
+<template>Mouse position is at: {{ x }}, {{ y }}</template>
+```
+
+但是，如果我们想在多个组件中复用这个相同的逻辑呢？你可以每个需要的组件都引入一次即可。但是还有更好的方法就是把这个逻辑以一个组合式函数的形式提取到外部文件中 mouse.js 中，然后需要的组件只需要导入这个组合式函数并运行即可得到鼠标在页面的实时位置信息。
+
+```
+// mouse.js
+import { ref, onMounted, onUnmounted } from 'vue'
+
+// 按照惯例，组合式函数名以“use”开头
+export function useMouse() {
+  // 被组合式函数封装和管理的状态
+  const x = ref(0)
+  const y = ref(0)
+
+  // 组合式函数可以随时更改其状态。
+  function update(event) {
+    x.value = event.pageX
+    y.value = event.pageY
+  }
+
+  // 一个组合式函数也可以挂靠在所属组件的生命周期上
+  // 来启动和卸载副作用
+  onMounted(() => window.addEventListener('mousemove', update))
+  onUnmounted(() => window.removeEventListener('mousemove', update))
+
+  // 通过返回值暴露所管理的状态
+  return { x, y }
+}
+
+// 下面是它在组件中使用的方式：
+<script setup>
+import { useMouse } from './mouse.js'
+
+const { x, y } = useMouse()
+</script>
+
+<template>Mouse position is at: {{ x }}, {{ y }}</template>
+
+一个组合式函数是可以调用一个或多个其他的组合式函数。例如上面添加和清除 DOM 事件监听器的逻辑也封装进一个组合式函数中
+
+
+```
+
+2. 一个异步状态示例
+
+上面的组合式函数没有接收任何参数、但实际上组合式函数也是可以接收任意多个参数的。
+在做异步数据请求时，我们常常需要处理不同的状态：加载中、加载成功和加载失败。
+
+```
+<script setup>
+import { ref } from 'vue'
+
+const data = ref(null)
+const error = ref(null)
+
+fetch('...')
+  .then((res) => res.json())
+  .then((json) => (data.value = json))
+  .catch((err) => (error.value = err))
+</script>
+
+<template>
+  <div v-if="error">Oops! Error encountered: {{ error.message }}</div>
+  <div v-else-if="data">
+    Data loaded:
+    <pre>{{ data }}</pre>
+  </div>
+  <div v-else>Loading...</div>
+</template>
+
+```
+
+如果在每个需要获取数据的组件中都要重复这种模式，那就太繁琐了。让我们把它抽取成一个组合式函数。
+
+```
+// fetch.js
+import { ref, isRef, unref, watchEffect } from 'vue'
+
+export function useFetch(url) {
+  const data = ref(null)
+  const error = ref(null)
+
+  function doFetch() {
+    // 在请求之前重设状态...
+    data.value = null
+    error.value = null
+    // unref() 解包可能为 ref 的值
+    fetch(unref(url))
+      .then((res) => res.json())
+      .then((json) => (data.value = json))
+      .catch((err) => (error.value = err))
+  }
+
+  if (isRef(url)) {
+    // 若输入的 URL 是一个 ref，那么启动一个响应式的请求
+    watchEffect(doFetch)
+  } else {
+    // 否则只请求一次
+    // 避免监听器的额外开销
+    doFetch()
+  }
+
+  return { data, error }
+}
+```
+
+### 4.1.3 最佳实践
+
+从示例可以看出组合式函数本质就是一个函数、只不过使用了 vue3 的组合是 api。
+命名：同时组合式函数约定使用大驼峰命名法，并以“use” 作为开头，它也被称之为 hooks。
+传参：组合式函数是可以接收 ref 参数的，不过要处理好输入参数时兼容 ref 而不只是原始的值。这时 unref() 工具函数会对此非常有帮助。如果参数是 ref，则返回内部值(也就是 val.value)，否则直接返回参数本身。
+返回值：推荐的约定是组合式函数始终返回一个包含多个 ref 的普通的非响应式对象，这样该对象在组件中被解构为 ref 之后仍可以保持响应性。如下：解构出来是 ref
+// x 和 y 是两个 ref
+const { x, y } = useXXXX()
+副作用：在组合式函数中的确可以执行副作用 (例如：添加 DOM 事件监听器或者请求数据)，但是要确保在 组件 onUnmounted() 时清理副作用。
+组件使用：组合式函数只能在 script setup> 或 setup() 钩子中，且应始终被同步地调用。
+
+## 4.2 自定义指令
+
+### 4.2.1 概述
+
+在学习 vue 模板语法时我们就知道，除了 vue 内置的一系列指令之外，Vue 还允许你注册自定义的指令 (Custom Directives)。
+到这里我们已经学习了两种在 vue 中重用代码的方式、组件和组合式函数。组件时页面的主要用来构建模块，而组合式函数则侧重于有状态的逻辑。而现在要学的自定义指令主要是为了重用涉及普通元素的底层 DOM 访问的逻辑。
+一个自定义指令由一个包含类似组件生命周期钩子的对象来定义。钩子函数会接收到指令所绑定元素作为其参数。同时对于自定义指令来说，一个很常见的情况是仅仅需要在 mounted 和 updated 上实现相同的行为，除此之外并不需要其他钩子。
+
+### 4.2.2 语法
+
+由概述可以知道、一个自定义指令其实就是一个 JavaScript 对象。这个对象里有一些类似组件生命周期的钩子函数(都是可选的)。
+这些钩子函数能自动接收到自定义指令所绑定的元素对象。具体如下：
+
+```
+const myDirective = {
+  // 在绑定元素的 attribute 前
+  // 或事件监听器应用前调用
+  created(el, binding, vnode, prevVnode) {
+    // 下面会介绍各个参数的细节
+  },
+  // 在元素被插入到 DOM 前调用
+  beforeMount(el, binding, vnode, prevVnode) {},
+  // 在绑定元素的父组件
+  // 及他自己的所有子节点都挂载完成后调用
+  mounted(el, binding, vnode, prevVnode) {},
+  // 绑定元素的父组件更新前调用
+  beforeUpdate(el, binding, vnode, prevVnode) {},
+  // 在绑定元素的父组件
+  // 及他自己的所有子节点都更新后调用
+  updated(el, binding, vnode, prevVnode) {},
+  // 绑定元素的父组件卸载前调用
+  beforeUnmount(el, binding, vnode, prevVnode) {},
+  // 绑定元素的父组件卸载后调用
+  unmounted(el, binding, vnode, prevVnode) {}
+}
+```
+
+指令的钩子都可以传递以下 4 种参数:
+el：指令绑定到的元素。这可以用于直接操作 DOM。
+binding：一个对象，包含以下属性。
+value：传递给指令的值。例如在 v-my-directive="1 + 1" 中，值是 2。
+oldValue：之前的值，仅在 beforeUpdate 和 updated 中可用。无论值是否更改，它都可用。
+arg：传递给指令的参数 (如果有的话)。例如在 v-my-directive:foo 中，参数是 "foo"。
+modifiers：一个包含修饰符的对象 (如果有的话)。例如在 v-my-directive.foo.bar 中，修饰符对象是 { foo: true, bar: true }。
+instance：使用该指令的组件实例。
+dir：指令的定义对象。
+
+vnode：代表绑定元素的底层 VNode。
+
+prevNode：之前的渲染中代表指令所绑定元素的 VNode。仅在 beforeUpdate 和 updated 钩子中可用。
+
+### 4.2.3 实践
+
+将一个自定义指令全局注册到应用层级也是一种常见的做法所以我们主要学习全局的。
+例如：
+// 使 v-focus 在所有组件中都可用
+app.directive('focus', {
+/_ ... _/
+})
+
+## 4.3 插件
+
+### 4.3.1 概述
+
+插件 (Plugins) 是一种能为 Vue 添加全局功能的工具代码。
+要使用 app.use() 注册。
+一个插件可以是一个拥有 install() 方法的对象，也可以直接是一个安装函数本身。安装函数会接收到安装它的应用实例和传递给 app.use() 的额外选项作为参数
+插件没有严格定义的使用范围，但是插件发挥作用的常见场景主要包括以下几种：
+
+    通过 app.component() 和 app.directive() 注册一到多个全局组件或自定义指令。
+
+    通过 app.provide() 使一个资源可被注入进整个应用。
+
+    向 app.config.globalProperties 中添加一些全局实例属性或方法
+
+    一个可能上述三种都包含了的功能库 (例如 vue-router)。
+
+```
+const myPlugin = {
+  install(app, options) {
+    // 配置此应用
+  }
+}
+```
+
+### 4.3.2 实践
+
+写一个简单的 i18n (国际化 (Internationalization) 的缩写) 插件。
+在一个单独的文件中创建并导出一个拥有 install() 方法的插件对象，以保证更好地管理逻辑。
+我们希望有一个翻译函数，这个函数接收一个以 . 作为分隔符的 key 字符串，用来在用户提供的翻译字典中查找对应语言的文本。期望的使用方式如下：
+这个函数应当能够在任意模板中被全局调用。这一点可以通过在插件中将它添加到 app.config.globalProperties 上来实现
+
+```
+<h1>{{ $translate('greetings.hello') }}</h1>
+// plugins/i18n.js
+export default {
+ install: (app, options) => {
+    // 注入一个全局可用的 $translate() 方法
+    app.config.globalProperties.$translate = (key) => {
+      // 获取 `options` 对象的深层属性
+      // 使用 `key` 作为索引
+      return key.split('.').reduce((o, i) => {
+        if (o) return o[i]
+      }, options)
+    }
+  }
+}
+
+```
+
+# 五、内置组件
+
+除了内置指令还有内置组件，它们都是由 vue 原生提供的有特定作用的组件。
+
+## 5.1 KeepAlive 内置组件
+
+KeepAlive 是一个内置组件，它的功能是在多个组件间动态切换时缓存被移除的组件实例。
+这个我们在动态组件时有学习过，默认情况下，一个组件实例在被替换掉后会被销毁，这会导致它丢失其中所有已变化的状态——当这个组件再一次被显示时，会创建一个只带有初始状态的新实例。如果希望保留被切换组件的状态就要使用 KeepAlive 组件包裹 component 元素。
+
+KeepAlive 组件默认会缓存内部的所有组件实例，但我们可以通过 include 和 exclude prop 来定制该行为。这两个 prop 的值都可以是一个以英文逗号分隔的字符串、一个正则表达式，或是包含这两种类型的一个数组。它会根据组件的 name 选项进行匹配，所以组件如果想要条件性地被 KeepAlive 缓存，就必须显式声明一个 name 选项。
+
+也可以通过传入 max prop 来限制可被缓存的最大组件实例数，如果缓存的实例数量即将超过指定的那个最大数量，则最久没有被访问的缓存实例将被销毁，以便为新的实例腾出空间。
+
+## 5.2 过渡效果和动画内置组件
+
+Vue 提供了两个内置组件，可以帮助你制作基于状态变化的过渡和动画：
+Transition> 会在一个元素或组件进入和离开 DOM 时应用动画。
+TransitionGroup> 会在一个 v-for 列表中的元素或组件被插入，移动，或移除时应用动画。
