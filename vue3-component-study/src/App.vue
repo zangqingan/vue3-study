@@ -22,6 +22,8 @@ const pos = ref(1);
 const url = computed(() => baseUrl + pos.value);
 
 const { data, error, retry } = useFetch(url);
+
+const show = ref(true);
 </script>
 
 <template>
@@ -59,11 +61,26 @@ const { data, error, retry } = useFetch(url);
     flag="haha"
     @submit="handleSubmit"
   />
+  <hr />
+  <div>下面是内置组件</div>
+  <button @click="show = !show">Toggle</button>
+  <Transition>
+    <p v-if="show">hello</p>
+  </Transition>
 </template>
 
 <style scoped>
 #app {
   width: 100%;
   height: 100%;
+}
+.v-enter-active,
+.v-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.v-enter-from,
+.v-leave-to {
+  opacity: 0;
 }
 </style>
