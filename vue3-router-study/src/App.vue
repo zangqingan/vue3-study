@@ -5,7 +5,14 @@ import { RouterView } from "vue-router";
 <template>
   <div class="app-content">
     <router-link class="link" to="/">首页</router-link>
-    <router-link class="link" to="/about">动态路由</router-link>
+    <router-link class="link" to="/about/zhangsan">动态路由</router-link>
+    <router-link class="link" to="/program">编程式导航</router-link>
+    <router-link
+      class="link"
+      :to="{ name: 'nameProp', query: { username: 'nameProp' } }"
+      >命名路由</router-link
+    >
+    <router-link class="link" to="/guide">导航守卫</router-link>
   </div>
   <!-- 路由出口 -->
   <!-- 路由匹配到的组件将渲染在这里 -->
