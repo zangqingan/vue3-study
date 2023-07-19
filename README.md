@@ -1145,68 +1145,14 @@ src
 
 和 vue2 相比，vue3 使用了新的状态管理库 pinia，虽然依然可以使用 vuex。但是不推荐了，原因是 Pinia 在生态系统中能够承担相同的职责且能做得更好，它提供了更简洁直接的 API，并提供了组合式风格的 API，最重要的是，在使用 TypeScript 时它提供了更完善的类型推导。
 
-# 六、vue3 插件
+# 六、vue3 常见 UI 库学习
 
-## 6.1 vue 专属插件
+常见框架结合 vue3 的使用，基本上走一遍过即可，实际开发中忘记了就看官网文档即可。
 
-插件 (Plugins) 是一种能为 Vue 添加全局功能的工具代码。通过 Vue Plugins 设计规范 开发出来的插件，在 npm 上通常是以 vue-xxx 这样带有 vue 关键字的格式命名。比如官方路由 vue-router 等等。一般放在 plugins 目录下。
-vue3 依然使用 vue 实例的 use()方法注册插件，一般是初始化为全局插件。
-一个插件可以是一个拥有 install() 方法的对象，也可以直接是一个安装函数本身。
-安装函数会接收到安装它的应用实例和传递给 app.use() 的额外选项作为参数。
-这是因为 use()方法就是接受两个参数的。
-参数一：plugin object | function 插件，一般是在 import 时使用的名称
-参数二：options object 插件的参数，有些插件在初始化时可以配置一定的选项
+## 6.1 Element Plus
 
-插件没有严格定义的使用范围，但是插件发挥作用的常见场景主要包括以下几种：
-通过 app.component() 和 app.directive() 注册一到多个全局组件或自定义指令。
-通过 app.provide() 使一个资源可被注入进整个应用。
-向 app.config.globalProperties 中添加一些全局实例属性或方法
-一个可能上述三种都包含了的功能库 (例如 vue-router)。
-
-而声明 Vue 插件的时候，需要遵循 Vue 官方撰写的 Vue Plugins 设计规范 ，并且做好必要的代码注释，除了标明插件 API 的 “用途、入参、返回值” 之外，最好在注释内补充一个 Example 或者 Tips 说明，功能丰富的插件最好直接写个 README 文档。
-例如：
-myPlugin.ts
-// 对象格式
-export default const myPlugin = {
-install(app, options) {
-// 配置此应用
-}
-}
-
-// 函数格式，Vue 会直接调用这个函数
-
-export default function (app, options) {
-// 逻辑代码...
-}
-
-## 6.2 通用插件
-
-通用插件它是针对具体的业务，或者涉及到一些经常用到的功能模块，也是可以抽离出来封装成项目专用的插件。
-其实就是封装的工具类方法了，比较常见的如验证类的方法可以统一封装一下。一般放在 utils 目录或者 libs 目录下。
-而通用插件可以用时导入也可以全局注册，即将其挂载到 Vue 上，使其成为 Vue 的全局变量。
-一般是对于一些使用频率比较高的插件方法挂载，少数几个页面使用就没必要全局挂载了。
-因为如果在整个应用中使用不同插件注入的太多全局属性，很容易让应用变得难以理解和维护。
-
-在 Vue 2 ，可以通过 prototype 的方式来挂载全局变量，然后通过 this 关键字来从 Vue 原型上调用该方法。
-Vue.prototype.$md5 = md5
-访问
-const md5Msg = this.$md5('message')
-
-而在 vue3 中，已经不再支持 prototype 这样使用了，在 main.ts 里没有了 Vue，在组件的生命周期里也没有了 this。
-
-如果依然想要挂载全局变量，需要挂载在 vue 实例对象的 config 对象的 globalProperties 属性上来实现。
-globalProperties 是一个用于注册能够被应用内所有组件实例访问到的全局属性的对象。也就是说添加到这个对象上的属性或方法能被应用内的所有组件访问到。
-注意：如果全局属性与组件自己的属性冲突，组件自己的属性将具有更高的优先级。
-同时在 Vue 3 实际上并不是特别推荐使用全局变量，Vue 3 比较推荐按需引入使用，这也是在构建过程中可以更好的做到代码优化。
-
-// 把插件的 API 挂载全局变量到实例上
-app.config.globalProperties.$md5 = md5
-// 也可以自己写一些全局函数去挂载
-app.config.globalProperties.$log = (text: string): void => {
-console.log(text)
-}
-
-只能说尽力不使用，确实需要全局 api 啥的可以在入口文件就依赖注入，或者 pinia。
+饿了么对接 vue3 版本的 UI 组件库，开箱即用，社区发达，各种问题基本都能找到。
+官网：https://element-plus.org/zh-CN/#/zh-CN，基于 Vue 3，面向设计师和开发者的组件库。
 
 # 七、vue3 综合练习 vue3-synthesize-practise
 
