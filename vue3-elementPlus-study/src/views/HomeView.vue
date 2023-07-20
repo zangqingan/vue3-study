@@ -6,6 +6,7 @@
       <el-aside width="200px">
         <el-menu
           active-text-color="#ffd04b"
+          router
           background-color="#545c64"
           class="el-menu-vertical-demo"
           default-active="2"
@@ -27,11 +28,15 @@
             <el-icon>4</el-icon>
             <span>其它组件</span>
           </el-menu-item>
+          <el-menu-item index="/lodash-study">
+            <el-icon>5</el-icon>
+            <span>lodash工具库使用</span>
+          </el-menu-item>
         </el-menu>
       </el-aside>
       <el-container>
-        <el-header>Header</el-header>
-        <el-main>Main</el-main>
+        <el-header></el-header>
+        <el-main><RouterView /></el-main>
       </el-container>
     </el-container>
   </div>
@@ -46,8 +51,12 @@
   width: 100%;
   height: 100%;
 }
+.el-header {
+  background-color: #7c8187;
+}
 .el-menu {
   width: 100%;
   height: 100%;
+  border-right: 0;
 }
 </style>
