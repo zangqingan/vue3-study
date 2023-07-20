@@ -169,7 +169,120 @@ export default {
 
 ```
 
-# 四、实用工具库 lodash 学习
+# 四、Element Plus 常用的图标集合使用。
+
+Element Plus 提供了一套常用的图标集合，它跟饿了么组件一样也可以全局注册和按需自动导入两种方法。
+安装：npm install @element-plus/icons-vue
+
+## 4.1 全部导入注册成全局组件
+
+在目录下新建一个 components/ElementUiIcon/index.js,如下暴露成 vue 插件，然后再入口文件 main.js 中引入注册插件即可完成全局注册。
+
+```
+//components/ElementUiIcon/index.js
+import * as ElementPlusIcons from "@element-plus/icons-vue";
+
+export default {
+  install: (app) => {
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+      app.component(key, component);
+    }
+  },
+};
+// main.js
+import ElementPlusIcons from '@/components/ElementUiIcon/index.js'
+app.use(ElementPlusIcons);全局注册图标
+
+<!-- 使用 el-icon 为 SVG 图标提供属性 -->
+<template>
+  <div>
+    <el-icon :size="size" :color="color">
+      <Edit />
+    </el-icon>
+    <!-- 或者独立使用它，不从父级获取属性 -->
+    <Edit />
+  </div>
+</template>
+
+
+```
+
+## 4.2 按需自动导入
+
+和饿了么组件按需自动导入一样也需要使用 unplugin-icons
+和 unplugin-auto-import 两个库就可以从 iconify 中自动导入任何图标集。
+后一个已经安装所以只需要安装第一个即可。
+安装：npm i unplugin-icons,然后在 vite 配置文件中进行配置即可。
+配置文件保存重启后会自动安装 @iconify-json/ep 包。如果安装报错就手动安装
+：npm install @iconify-json/ep
+
+```
+import { fileURLToPath, URL } from "node:url";
+
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
+
+// 按需自动导入
+import Components from "unplugin-vue-components/vite";
+import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
+import AutoImport from "unplugin-auto-import/vite";
+
+// 自动导入图标
+import Icons from "unplugin-icons/vite";
+import IconsResolver from "unplugin-icons/resolver";
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [
+    vue(),
+    // 按需自动导入
+    Components({
+      /* options */
+
+      resolvers: [
+        // 自动导入 Element Plus 组件
+        ElementPlusResolver(),
+        // 自动注册图标组件
+        IconsResolver({
+          enabledCollections: ["ep"],
+        }),
+      ],
+    }),
+    AutoImport({
+      /* options */
+      // 要注册的全局导入:像vue、vue-router等都是插件预设自带的，写上接口自动导入API
+      // 也就是自动导入 Vue 和vue-router 相关函数，如：ref, reactive, toRef 等
+      imports: ["vue", "vue-router"],
+      // 饿了么UI组件
+      resolvers: [
+        // 自动导入 Element Plus 相关函数，如：ElMessage, ElMessageBox... (带样式)
+        ElementPlusResolver(),
+        // 自动导入图标组件
+        IconsResolver({
+          prefix: "Icon",
+        }),
+      ],
+    }),
+    Icons({
+      autoInstall: true,
+    }),
+  ],
+  resolve: {
+    alias: {
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+    },
+  },
+});
+
+// 使用：必须按照以下格式引入
+<template>
+    <!-- 自动导入必须遵循名称格式 {prefix：默认为i}-{collection：图标集合的名称}-{icon：图标名称}  -->
+   <i-ep-expand />
+    <el-icon><i-ep-expand /></el-icon>
+</template>
+```
+
+# 五、实用工具库 lodash 学习
 
 概述：Lodash 是一个一致性、模块化、高性能流行的 JavaScript 实用工具库，提供了许多常用的函数和工具，能够方便地处理集合、字符串、数值、函数等多种数据类型，减少编写重复代码的时间和精力。Lodash 的 API 设计与 ES6 的新特性相似，同时兼容了更早的浏览器版本。Lodash 支持模块化加载，可以通过 npm 或在浏览器中直接引入来使用。
 简单说就是帮忙定义好了很多应对常见功能的函数。
@@ -179,4 +292,4 @@ export default {
 或者按需导入需要按个方法导入那个方法。
 注意：原生的也能实现只是说这个封装好了方便使用。
 
-## 4.1 数组相关
+## 5.1 数组相关

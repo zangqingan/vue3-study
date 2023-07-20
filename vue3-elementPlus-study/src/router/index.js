@@ -14,6 +14,11 @@ const router = createRouter({
           name: "LodashStudy",
           component: () => import("@/views/LodashStudy.vue"),
         },
+        {
+          path: "myTable-study",
+          name: "MyTable",
+          component: () => import("@/views/MyTable.vue"),
+        },
       ],
     },
     {
