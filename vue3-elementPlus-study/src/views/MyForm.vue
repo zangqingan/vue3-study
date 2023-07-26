@@ -2,7 +2,12 @@
   <div>
     111
     <el-button @click="hanldeClick">按钮</el-button>
-    <SearchForm :form-data="queryParams" :options-data="searchOptions" />
+    <SearchForm
+      :form-data="queryParams"
+      :options-data="searchOptions"
+      @on-search="handleQuery"
+      @on-reset="handleReset"
+    />
     <CommonTable />
     <CommonTable />
     <Pagination />
@@ -182,6 +187,15 @@ const searchOptions = [
     },
   },
 ];
+
+const handleQuery = () => {
+  console.log("query", queryParams);
+  // 请求接口
+};
+
+const handleReset = () => {
+  console.log("query", queryParams);
+};
 </script>
 
 <style lang="scss" scoped></style>

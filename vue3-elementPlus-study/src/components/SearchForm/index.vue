@@ -181,16 +181,21 @@ const props = defineProps({
   // 表单数据
   formData: {
     type: Object,
-    default: () => {},
+    default() {
+      return {};
+    },
   },
   // 表单项
   optionsData: {
     type: Array,
+    default() {
+      return [];
+    },
   },
 });
 
 // 发射事件
-const emits = defineEmits(["update:formData"]);
+const emits = defineEmits(["update:formData", "on-search", "on-reset"]);
 
 // 拷贝筛选条件点击搜索改变传参
 const newFormData = computed({
@@ -206,11 +211,17 @@ const newFormData = computed({
 // 搜索
 const handleSearch = () => {
   console.log("search");
+  emits("on-search");
 };
 
+const searchFormRef = ref(null); // 表单对象
 // 重置搜索表单
 const handleReset = () => {
   console.log("reset");
+  if (searchFormRef.value) {
+    searchFormRef.value.resetFields();
+  }
+  emits("on-reset");
 };
 
 const isCollapse = ref(false); // 是否是收缩状态
