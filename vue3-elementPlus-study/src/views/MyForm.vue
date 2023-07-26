@@ -1,6 +1,5 @@
 <template>
   <div>
-    111
     <el-button @click="hanldeClick">按钮</el-button>
     <SearchForm
       :form-data="queryParams"
@@ -8,9 +7,6 @@
       @on-search="handleQuery"
       @on-reset="handleReset"
     />
-    <CommonTable />
-    <CommonTable />
-    <Pagination />
   </div>
 </template>
 
