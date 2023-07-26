@@ -21,7 +21,7 @@ const handleCollapse = () => {
           <el-icon>1</el-icon>
           <span>表格组件</span>
         </el-menu-item>
-        <el-menu-item index="2">
+        <el-menu-item index="myForm-study">
           <el-icon>2</el-icon>
           <span>表单组件</span>
         </el-menu-item>

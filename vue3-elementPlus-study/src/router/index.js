@@ -19,6 +19,11 @@ const router = createRouter({
           name: "MyTable",
           component: () => import("@/views/MyTable.vue"),
         },
+        {
+          path: "myForm-study",
+          name: "MyForm",
+          component: () => import("@/views/MyForm.vue"),
+        },
       ],
     },
     {

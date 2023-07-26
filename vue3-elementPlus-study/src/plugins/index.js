@@ -9,9 +9,18 @@ const pluginsMap = new Map(
   })
 );
 
-// 批量依赖注册函数
-export default function installPlugins(app) {
-  pluginsMap.forEach((value, key) => {
-    app.provide(key, value);
-  });
-}
+// 批量全局注入依赖函数形式
+// export default function installPlugins(app) {
+//   pluginsMap.forEach((value, key) => {
+//     app.provide(key, value);
+//   });
+// }
+
+// 批量全局注入依赖插件形式
+export default {
+  install: (app) => {
+    pluginsMap.forEach((value, key) => {
+      app.provide(key, value);
+    });
+  },
+};
