@@ -1,5 +1,5 @@
 <template>
-  <div ref="searchFormBoxRef">
+  <div ref="searchFormBoxRef" class="box">
     <el-form
       ref="searchFormRef"
       v-bind="$attrs"
@@ -294,6 +294,9 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
+.box {
+  background-color: #fff;
+}
 .search-form {
   border-top: 1px solid #e8e8e8;
   padding: 16px 20px;

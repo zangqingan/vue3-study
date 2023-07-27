@@ -49,7 +49,7 @@ const handleCollapse = () => {
             </el-button>
           </div>
         </el-header>
-        <el-main><RouterView /></el-main>
+        <el-main class="app-main"><RouterView /></el-main>
       </el-container>
     </el-container>
   </div>
@@ -90,5 +90,8 @@ const handleCollapse = () => {
     width: 2em;
     height: 2em;
   }
+}
+.app-main {
+  background-color: #f1f3f5;
 }
 </style>
