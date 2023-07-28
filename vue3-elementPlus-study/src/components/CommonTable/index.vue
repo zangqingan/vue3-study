@@ -27,18 +27,27 @@
       </el-table>
     </div>
     <!-- 分页 -->
-    <div></div>
+    <div>
+      <Pagination
+        v-model:custom-page="pageComputed"
+        v-model:custom-limit-num="limitComputed"
+        :custom-total="total"
+        @page-change="handlePageChange"
+      />
+    </div>
   </div>
 </template>
 
 <script setup>
 const props = defineProps({
+  // 表格数据
   tableData: {
     type: Array,
     default() {
       return [];
     },
   },
+  // 表格列配置
   columnOptions: {
     type: Array,
     required: true,
@@ -46,7 +55,48 @@ const props = defineProps({
       return [];
     },
   },
+  // 当前页
+  page: {
+    type: Number,
+    default: 1,
+  },
+  // 页码大小
+  limit: {
+    type: Number,
+    default: 10,
+  },
+  // 页码总数
+  total: {
+    type: Number,
+    default: 0,
+  },
 });
+
+const emits = defineEmits(["update:page", "update:limit", "pageChange"]);
+// 双向绑定page
+const pageComputed = computed({
+  get() {
+    return props.page;
+  },
+  set(newValue) {
+    emits("update:page", newValue);
+  },
+});
+
+// 双向绑定limit
+const limitComputed = computed({
+  get() {
+    return props.limit;
+  },
+  set(newValue) {
+    emits("update:limit", newValue);
+  },
+});
+
+// 页码或当前页改变
+const handlePageChange = (payload) => {
+  emits("pageChange", { ...payload });
+};
 </script>
 
 <style lang="scss" scoped>

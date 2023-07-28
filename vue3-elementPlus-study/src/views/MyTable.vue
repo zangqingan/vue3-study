@@ -7,7 +7,15 @@
       @on-reset="handleReset"
     />
     <div class="divide"></div>
-    <CommonTable :table-data="tableData" :column-options="columnOptions" border>
+    <CommonTable
+      v-model:page="queryParams.pageNum"
+      v-model:limit="queryParams.pageSize"
+      :total="total"
+      :table-data="tableData"
+      :column-options="columnOptions"
+      @page-change="handlePageChange"
+      border
+    >
       <template #gender="{ row }">
         <div>
           {{ row.gender === 0 ? "男" : "女" }}
@@ -28,13 +36,12 @@ const queryParams = reactive({
   dispatcherName: undefined,
   taskNo: undefined,
 });
-
+const total = ref(200);
 const searchOptions = [
   { name: "文章名称", props: "title" },
   { name: "创建人", props: "dispatcherName" },
   { name: "任务单号", props: "taskNo" },
 ];
-
 const handleQuery = () => {
   console.log("query", queryParams);
   // 请求接口
@@ -98,6 +105,12 @@ const columnOptions = [
 // 编辑
 const handleEdit = (row) => {
   console.log("row", row);
+};
+
+// 页码或当前页改变
+const handlePageChange = (payload) => {
+  console.log("payload", payload);
+  console.log("queryParams", queryParams);
 };
 </script>
 
