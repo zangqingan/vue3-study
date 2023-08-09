@@ -9,9 +9,12 @@ export {}
 
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
+    App: typeof import('./../App.vue')['default']
     CommonAside: typeof import('./../Layout/CommonAside.vue')['default']
     CommonHeader: typeof import('./../Layout/CommonHeader.vue')['default']
     CommonLayout: typeof import('./../Layout/CommonLayout.vue')['default']
+    ComponentsCommonAside: typeof import('./../Layout/components/CommonAside.vue')['default']
+    ComponentsCommonHeader: typeof import('./../Layout/components/CommonHeader.vue')['default']
     ElAside: typeof import('element-plus/es')['ElAside']
     ElAvatar: typeof import('element-plus/es')['ElAvatar']
     ElBreadcrumb: typeof import('element-plus/es')['ElBreadcrumb']
@@ -31,9 +34,12 @@ declare module '@vue/runtime-core' {
     ElSubMenu: typeof import('element-plus/es')['ElSubMenu']
     IEpExpand: typeof import('~icons/ep/expand')['default']
     IEpFold: typeof import('~icons/ep/fold')['default']
+    Layout: typeof import('./../Layout/index.vue')['default']
     LayoutCommonAside: typeof import('./../components/Layout/CommonAside.vue')['default']
     LayoutCommonHeader: typeof import('./../components/Layout/CommonHeader.vue')['default']
     LayoutCommonLayout: typeof import('./../components/Layout/CommonLayout.vue')['default']
+    LayoutComponentsCommonAside: typeof import('./../Layout/components/CommonAside.vue')['default']
+    LayoutComponentsCommonHeader: typeof import('./../Layout/components/CommonHeader.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SvgIcon: typeof import('./../components/SvgIcon/index.vue')['default']

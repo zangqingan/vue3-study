@@ -11,8 +11,8 @@ const handleClose = (key: string, keyPath: string[]) => {
 
 <template>
   <el-aside width="200px">
-    <el-scrollbar height="300px">
-      <h3 class="head-title">青安后台管理系统</h3>
+    <div class="head-title">青安后台管理系统</div>
+    <el-scrollbar>
       <el-menu
         default-active="1"
         class="el-menu-vertical-demo"
@@ -54,7 +54,7 @@ const handleClose = (key: string, keyPath: string[]) => {
 
 <style scoped lang="scss">
 .el-aside {
-  height: 100vh;
+  height: 100%;
   width: auto;
   background-color: #545c64;
   color: #fff;
@@ -64,11 +64,13 @@ const handleClose = (key: string, keyPath: string[]) => {
 }
 .head-title {
   text-align: center;
+  height: 60px;
+  line-height: 60px;
+  font-size: 18px;
 }
 .el-menu {
   background-color: #545c64;
   border-right: none;
-  height: 100%;
   .el-menu-item {
     color: #fff;
   }
@@ -79,5 +81,8 @@ const handleClose = (key: string, keyPath: string[]) => {
 .el-menu-vertical-demo:not(.el-menu--collapse) {
   width: 200px;
   min-height: 400px;
+}
+.el-scrollbar {
+  height: auto;
 }
 </style>

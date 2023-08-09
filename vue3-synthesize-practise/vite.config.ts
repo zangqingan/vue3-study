@@ -70,7 +70,7 @@ export default defineConfig(({ command, mode }) => {
       }),
       Components({
         // 指定组件位置, 默认是src/components 自动导入自定义组件
-        dirs: ['src/components', 'src/Layout'],
+        dirs: ['src/components'],
         extensions: ['vue'],
         resolvers: [
           // ui库解析器-自动导入 Element Plus 组件
