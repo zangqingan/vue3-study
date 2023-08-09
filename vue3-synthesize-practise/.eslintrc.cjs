@@ -245,15 +245,7 @@ module.exports = {
       1,
       'always',
       {
-        markers: [
-          'global',
-          'globals',
-          'eslint',
-          'eslint-disable',
-          '*package',
-          '!',
-          ','
-        ],
+        markers: ['global', 'globals', 'eslint', 'eslint-disable', '*package', '!', ','],
         line: { markers: ['/'] }
       }
     ],

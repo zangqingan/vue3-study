@@ -20,8 +20,7 @@ const isCollapse = ref(false)
     </div>
     <el-dropdown class="pointer">
       <span class="el-dropdown-link d-flex jc-center ai-center">
-        <el-avatar
-          src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png" />
+        <el-avatar src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png" />
         <el-icon class="el-icon--right">
           <arrow-down />
         </el-icon>
