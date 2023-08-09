@@ -1,7 +1,4 @@
-<script setup lang="ts">
-import CommonAside from '@/components/Layout/CommonAside.vue'
-import CommonHeader from '@/components/Layout/CommonHeader.vue'
-</script>
+<script setup lang="ts"></script>
 
 <template>
   <div class="common-layout">
@@ -9,7 +6,11 @@ import CommonHeader from '@/components/Layout/CommonHeader.vue'
       <CommonAside />
       <el-container>
         <CommonHeader />
-        <el-main>Main</el-main>
+        <el-main>
+          <SvgIcon
+            name="menu-zip"
+            :size="16"></SvgIcon>
+        </el-main>
       </el-container>
     </el-container>
   </div>

@@ -9,6 +9,9 @@ export {}
 
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
+    CommonAside: typeof import('./../Layout/CommonAside.vue')['default']
+    CommonHeader: typeof import('./../Layout/CommonHeader.vue')['default']
+    CommonLayout: typeof import('./../Layout/CommonLayout.vue')['default']
     ElAside: typeof import('element-plus/es')['ElAside']
     ElAvatar: typeof import('element-plus/es')['ElAvatar']
     ElBreadcrumb: typeof import('element-plus/es')['ElBreadcrumb']
@@ -33,5 +36,6 @@ declare module '@vue/runtime-core' {
     LayoutCommonLayout: typeof import('./../components/Layout/CommonLayout.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SvgIcon: typeof import('./../components/SvgIcon/index.vue')['default']
   }
 }

@@ -7,6 +7,8 @@ import router from './router'
 
 // 引入样式
 import '@/assets/styles/index.scss'
+// 支持SVG
+import 'virtual:svg-icons-register'
 
 const app = createApp(App)
 

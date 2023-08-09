@@ -1,14 +1,15 @@
-import { fileURLToPath, URL } from 'node:url'
-import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import path from 'path'
 import EslintPlugin from 'vite-plugin-eslint'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import Icons from 'unplugin-icons/vite'
 import IconsResolver from 'unplugin-icons/resolver'
+import { fileURLToPath, URL } from 'node:url'
+import { defineConfig, loadEnv } from 'vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
-// mock
-import { viteMockServe } from 'vite-plugin-mock'
+import { viteMockServe } from 'vite-plugin-mock' // mock
+import { createSvgIconsPlugin } from 'vite-plugin-svg-icons' // 使用svg
 
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
@@ -39,13 +40,19 @@ export default defineConfig(({ command, mode }) => {
           setupProdMockServer();
         `
       }),
+      createSvgIconsPlugin({
+        // 指定需要缓存的图标文件夹
+        iconDirs: [path.resolve(process.cwd(), 'src/assets/icons')],
+        // 指定symbolId格式
+        symbolId: 'icon-[dir]-[name]'
+      }),
       EslintPlugin({
         include: ['src/**/*.js', 'src/**/*.vue', 'src/**/*.ts'],
         exclude: ['./node_modules']
       }),
       AutoImport({
         // 自动导入 Vue 和vue-router 相关函数，如：ref, reactive, toRef 等
-        imports: ['vue', 'vue-router','pinia'],
+        imports: ['vue', 'vue-router', 'pinia'],
         eslintrc: {
           enabled: false, // Default `false`需要注意的是，一旦生成配置文件之后，最好把改成false。否则这个文件每次会在重新加载的时候重新生成，这会导致eslint有时会找不到这个文件。
           filepath: './.eslintrc-auto-import.json',
@@ -62,6 +69,9 @@ export default defineConfig(({ command, mode }) => {
         dts: './src/types/auto-imports.d.ts' // 指定类型声明文件，为true时在项目根目录创建
       }),
       Components({
+        // 指定组件位置, 默认是src/components 自动导入自定义组件
+        dirs: ['src/components', 'src/Layout'],
+        extensions: ['vue'],
         resolvers: [
           // ui库解析器-自动导入 Element Plus 组件
           ElementPlusResolver(),
@@ -71,7 +81,7 @@ export default defineConfig(({ command, mode }) => {
           })
         ],
         directoryAsNamespace: true, // 组件名称包含目录，防止同名组件冲突
-        dts: './src/types/components.d.ts' // 指定类型声明文件，为true时在项目根目录创建
+        dts: './src/types/components.d.ts' // 配置文件生成位置指定类型声明文件，为true时在项目根目录创建
       }),
       Icons({
         autoInstall: true
