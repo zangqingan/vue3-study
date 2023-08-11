@@ -29,9 +29,9 @@ const handleCollapse = () => {
           <el-icon>3</el-icon>
           <span>弹窗组件</span>
         </el-menu-item>
-        <el-menu-item index="4">
+        <el-menu-item index="self-directive">
           <el-icon>4</el-icon>
-          <span>其它组件</span>
+          <span>自定义指令</span>
         </el-menu-item>
         <el-menu-item index="/lodash-study">
           <el-icon>5</el-icon>

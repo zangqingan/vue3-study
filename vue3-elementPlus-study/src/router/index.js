@@ -24,6 +24,11 @@ const router = createRouter({
           name: "MyForm",
           component: () => import("@/views/MyForm.vue"),
         },
+        {
+          path: "self-directive",
+          name: "SelfDirective",
+          component: () => import("@/views/SelfDirective.vue"),
+        },
       ],
     },
     {
