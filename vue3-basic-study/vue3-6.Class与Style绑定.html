@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://unpkg.com/vue@3.3.4/dist/vue.esm-browser.prod.js"></script>
+    <title>vue3-6.Class与Style绑定</title>
+    <style type="text/css">
+      .active {
+        background-color: aqua;
+      }
+
+      .text-danger {
+        color: red;
+      }
+      .objActive {
+        background-color: chartreuse;
+      }
+      .obj-text-danger {
+        color: blue;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h3>1. 概述</h3>
+      <div>
+        在模板语法的学习里已经知道，v-bind指令用于响应式地绑定一个attribute。
+        常见需求场景就是操纵元素的 CSS class 列表和内联样式。 因为 class 和
+        style 都是 attribute，所以我们可以和其他 attribute 一样使用 v-bind
+        将它们和动态的字符串绑定。<br />
+        同时为了方便操作，Vue 专门为 class 和 style 的 v-bind
+        用法提供了特殊的功能增强。除了字符串外，表达式的值也可以是对象或数组。
+        而这也是单独抽出来学习的原因。<br />
+        注意1：当动态绑定的值是字符串是可以说毫无意义，因为字符串是写死了的。
+        注意2：动态绑定的class 和style 会和一般的共存，也就是叠加，后面相同的覆盖前面的。
+        所以我们要学习的是绑定对象和绑定数组两种形势。
+      </div>
+      <h3>2. 绑定HTML class</h3>
+      <div>
+        <h4>2.1 绑定对象</h4>
+        <p>
+          给一个元素绑定对象形势绑定class常见有3中写法：<br>
+          分别如下：<br>
+          <b>1. 内联对象字面量的形式</b> <br>
+          我们可以直接给 :class (v-bind:class 的缩写) 传递一个对象来动态切换 class,这时对象的属性名就是要动态绑定的类名。
+          这时这个类名是否添加到元素上取决于对应对象属性值的真假值，为真值就加上，为假就移除。绑定的响应式值改变，class 列表会随之更新。<br>
+          <b>2. 直接绑定一个对象</b><br>
+
+          <b>3. 绑定一个返回对象的计算属性</b><br>
+          <br>
+          <pre>
+            // 1. 内联对象字面量的形式
+            const isActive = ref(true)
+            const hasError = ref(false)
+            div v-bind:class="{ active: isActive }">/div
+            // 缩写
+            div :class="{ active: isActive,'text-danger': hasError }">/div
+            // 当 isActive\hasError都为真值是最终渲染成下面的
+            div class="active text-danger">/div
+
+            // 2. 直接绑定一个对象
+            // 绑定对象变量
+            const classObject = reactive({
+              active: true,
+              'text-danger': false
+            })
+            div :class="classObject">/div
+
+            // 3. 绑定一个返回对象的计算属性
+            const isActive = ref(true)
+            const error = ref(null)
+            const classObject = computed(() => ({
+              active: isActive.value && !error.value,
+              'text-danger': error.value && error.value.type === 'fatal'
+            }))
+            div :class="classObject">/div
+          </pre>
+        </p>
+        <h4>2.2 绑定数组</h4>
+        <p>
+          除了绑定对象外，还可以给 :class 绑定一个数组来渲染多个 CSS class。其实不太常用。
+          <pre>
+            // 
+            const activeClass = ref('active')
+            const errorClass = ref('text-danger')
+            div :class="[activeClass, errorClass]">/div
+            // 渲染结果
+            div class="active text-danger">/div
+          </pre>
+        </p>
+        <h4>2.3 扩展-在组件上使用</h4>
+        <p>
+          对于只有一个根元素的组件，当你使用了 class attribute 时，这些 class 会被添加到根元素上并与该元素上已有的 class 合并。
+          所以可以直接对组件定义class声明样式。
+        </p>
+      </div>
+      <hr>
+      <div :class="{ active: isActive }">动态绑定的激活类样式</div><br>
+      <div :class="classObject">绑定对象变量</div><br>
+      <div :class="computedClassObject">绑定返回对象的计算属性</div><br>
+      <div :class="[activeClass, errorClass]">绑定数组</div>
+      <hr>
+      <h3>3. 绑定内联样式</h3>
+      <div>
+        <h4>3.1 绑定对象</h4>
+        <p>
+          和动态绑定class一样,绑定内联样式也是相同的三种形式,。<br>
+          <b>1. 内联对象字面量的形式</b> <br>
+          对象的属性名就是css样式属性名，不过要注意的时短横线形式的css属性要变成小驼峰形式。
+          如：font-size ==> fontSize 等等。<br>
+          <b>2. 直接绑定一个对象</b><br>
+          因为样式很多所以直接绑定一个样式对象通常是一个好主意，这样可以使模板更加简洁。<br>
+          <b>3. 绑定一个返回对象的计算属性</b><br>
+          如果样式对象需要更复杂的逻辑，也可以使用返回样式对象的计算属性
+          <pre>
+            // 1. 内联对象字面量的形式 
+            const activeColor = ref('red')
+            const fontSize = ref(30)
+            div :style="{ color: activeColor, fontSize: fontSize + 'px' }">/div
+
+            // 2. 直接绑定一个对象
+            const styleObject = reactive({
+              color: 'red',
+              fontSize: '13px'
+            })
+            div :style="styleObject">/div
+
+            // 3. 绑定一个返回对象的计算属性
+            const computedStyleObject = computed(() => ({
+              color: isActive.value ? "blue" : "red",
+              fontSize: "23px",
+            }))
+            div :style="computedStyleObject">/div
+          </pre>
+        </p>
+        <h4>3.2 绑定数组</h4>
+        <p>
+          除了绑定对象外，还可以给 :style 绑定一个包含多个样式对象的数组。这些对象最终会被合并后渲染到同一元素上。
+          <pre>
+            // 绑定数组
+            const baseStyles = reactive({
+              color: 'red'
+            })
+            const overridingStyles = reactive({
+              fontSize: '13px'
+            })
+            div :style="[baseStyles, overridingStyles]">/div
+          </pre>
+        </p>
+      </div>
+      <hr>
+      <div :style="{ color: activeColor, fontSize: fontSize + 'px' }">动态绑定的内联对象样式</div>
+      <div :style="styleObject">直接绑定一个对象</div>
+      <div :style="computedStyleObject">直接绑定一个计算属性</div>
+      <hr>
+    </div>
+    <script type="module">
+      import { createApp } from "https://unpkg.com/vue@3.3.4/dist/vue.esm-browser.prod.js";
+      import BasicComponent from "./js/basicComponent.js";
+      const app = createApp(BasicComponent);
+      app.mount("#app");
+    </script>
+  </body>
+</html>

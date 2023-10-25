@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://unpkg.com/vue@3.3.4/dist/vue.esm-browser.prod.js"></script>
+    <title>vue3-4.vue3响应式基础</title>
+  </head>
+  <body>
+    <div id="app">
+      <h3>1. 响应式概述</h3>
+      <div>
+        响应式的基础是要什么响应式状态，我们知道在vue2中只要在data选项中声明的变量就是响应式变量。
+        而到了vue3由于重构了底层使用了基础proxy(代理)的响应式原理,由于JavaScript语言Proxy语法本身的缺陷，它是不能监听基础类型值得变化的。
+        所以到了vue3 提供了两种声明响应式变量的方法。
+      </div>
+      <h3>2. 声明响应式对象或数组 reactive() 函数</h3>
+      <div>
+        在vue3可以使用 reactive()
+        函数来创建一个响应式对象或数组，传入一个对象，返回该对象的响应式代理对象。<br />
+        需要注意的是它的响应式转换是“深层”的：也就是说传入对象的所有嵌套子对象都会被影响到。
+        <br />
+        <br />
+        <b>语法：声明一个reactive响应式对象</b>
+        <pre>
+          // xxx.js 内声明
+          const obj = reactive({ count: 0 })
+          // 使用
+          obj.count
+        </pre>
+        <br />
+        <b>局限性：</b>
+        <br />
+        <p>
+          1.reactive 函数只对对象类型有效（对象、数组和 Map、Set
+          这样的集合类型），而对 string、number 和 boolean 这样的 原始类型
+          无效。<br />
+          2.因为 Vue
+          的响应式系统是通过属性访问进行追踪的，因此我们必须始终保持对该响应式对象的相同引用。这意味着我们不可以随意地“替换”一个响应式对象，因为这将导致对初始引用的响应性连接丢失。
+          也就是不能重新赋值给其它变量，也不能对响应式变量进行解构不然也会丢失响应式。
+        </p>
+        <div>
+          <p>
+            <b>我是reactive声明的变量对象中的name属性：</b>
+            {{objectOfAttrs.name}}
+          </p>
+          <p>
+            <b>我是reactive声明的变量对象中的age属性：</b> {{objectOfAttrs.age}}
+          </p>
+        </div>
+      </div>
+      <h3>3. 使用ref() 函数声明响应式变量</h3>
+      <div>
+        针对reactive函数的种种限制，vue提供了一个
+        ref()方法来创建任何值类型的响应式 ref，传入一个值，返回一个带有 .value
+        属性的ref对象。所以在访问时需要 .value
+        来访问，但是在模板中作为顶层属性被访问时不需要，因为vue框架帮忙了自动解包。
+        这个方法实际是对reactive方法的封装，底层用的还是reactive方法<br />
+        <pre>
+          // xxx.js 内声明
+          const count = ref(0)
+          // 使用
+          console.log(count) // { value: 0 }
+          console.log(count.value) // 0
+        </pre>
+        <p>
+          <b>我是ref声明的计数变量对象：</b>
+          <button @click="increment">
+            {{ count }}
+            <!-- 无需 .value -->
+          </button>
+        </p>
+      </div>
+    </div>
+    <script type="module">
+      import { createApp } from "https://unpkg.com/vue@3.3.4/dist/vue.esm-browser.prod.js";
+      import BasicComponent from "./js/basicComponent.js";
+      const app = createApp(BasicComponent);
+      app.mount("#app");
+    </script>
+  </body>
+</html>

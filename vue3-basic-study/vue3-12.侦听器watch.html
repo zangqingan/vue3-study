@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://unpkg.com/vue@3.3.4/dist/vue.esm-browser.prod.js"></script>
+    <title>vue3-12.侦听器watch</title>
+  </head>
+  <body>
+    <div id="app">
+      <h3>1、概述</h3>
+      <div>
+        之前的计算属性是允许我们声明性地计算衍生值,但是有些情况下我们需要在状态变化时执行一些“副作用”,也就是执行一些代码。
+        例如修改DOM、或者根据异步操作的结果去修改另一处的状态,这时候就需要侦听器了。<br>
+        只要侦听到响应式状态发生改变就会触发回调函数。
+      </div>
+      <h3>2、 watch使用</h3>
+      <div>
+        在vue3的组合式api中,侦听器统一使用watch()函数来实现,它比起vue2的watch选项使用方法更方便更统一。<br> 
+        它可以侦听一个或多个响应式数据源,并在数据源变化时调用所给的回调函数。但是它默认是懒侦听的,即仅在侦听源发生变化时才执行回调函数。<br>
+        它接收三个参数,具体如下:<br>
+        watch(source,callback,options) <br><br>
+
+        第一个参数-source 是侦听器的源,也就是要侦听的响应式数据可以是如下几种:<br>
+        一个ref --注意侦听时是不需要解包的,包括计算属性。<br>
+        一个reactive响应式对象。注意,不能直接侦听响应式对象的属性值。如果需要侦听需要使用getter函数。<br>
+        一个getter 函数,它返回一个值。常用来侦听props接受的值 () => props.list,或者指定响应式对象的某个属性() => obj.count。<br>
+        一个数组:这个数组由上面三种类型的值组成。<br><br>
+
+        第二个参数-callback 就是在source发生变化时要调用的回调函数。它接受三个参数:新值、旧值,以及一个用于注册副作用清理的回调函数。
+        该回调函数会在副作用下一次重新执行前调用,可以用来清除无效的副作用,例如等待中的异步请求。<br><br>
+
+        第三个参数-options 是一个可选的配置对象用来设置侦听器的特殊行为。有一下常见选项:<br>
+        immediate:true/false,watch 默认是懒执行的：仅当数据源变化时，才会执行回调。
+        在侦听器创建时立即执行一遍回调就可以设置整个选项。第一次调用时旧值是 undefined。
+        而且当侦听的source改变时会再次执行。<br>
+        deep:true/false,是否开启深层侦听模式。如果源是对象,强制深度遍历,以便在深层级变更时触发回调。也就是说直接侦听一个响应式对象时,侦听器会自动启用深层模式。<br>
+        flush:调整回调函数的刷新时机。用的不多<br>
+        onTrack / onTrigger:调试侦听器的依赖。用的不多<br><br>
+
+        停止侦听器：在 setup() 或 script setup 中用同步语句创建的侦听器，会自动绑定到宿主组件实例上，并且会在宿主组件卸载时自动停止。因此，在大多数情况下，你无需关心怎么停止一个侦听器。<br>
+        所以一个关键点是，侦听器必须用同步语句创建：如果用异步回调创建一个侦听器，那么它不会绑定到当前组件上，你必须手动停止它，以防内存泄漏。<br>
+        watch函数执行会返回一个函数，只需要接收并执行watch返回的函数即可停止侦听。<br><br>
+
+        注意，需要异步创建侦听器的情况很少，请尽可能选择同步创建。如果需要等待一些异步数据，你可以使用条件式的侦听逻辑,即增加if判断，值存在时才执行相关操作。
+        <pre> 
+          // 可以直接侦听一个 ref
+          const question = ref("");
+          const answer = ref("Questions usually contain a question mark. ;-)");
+          watch(question, async (newQuestion, oldQuestion) => {
+            if (newQuestion.indexOf("?") > -1) {
+              answer.value = "Thinking...";
+              try {
+                const res = await fetch("https://yesno.wtf/api");
+                answer.value = (await res.json()).answer;
+              } catch (error) {
+                answer.value = "Error! Could not reach the API. " + error;
+              }
+            }
+          })
+      
+          // 侦听整个reactive对象
+          const obj = reactive({ count: 0 });
+          watch(obj, (obj) => {
+            console.log(`count is: ${obj.count}`);
+          })
+      
+          //侦听一个 getter 函数
+          const x = ref(0);
+          const y = ref(0);
+          watch(
+            () => x.value + y.value,
+            (sum) => {
+              console.log(`sum of x + y is: ${sum}`);
+            }
+          )
+          // 响应式对象某个属性的正确侦听方法
+          watch(
+            () => obj.count,
+            (count, prevCount) => {
+              console.log(`count is: ${count}`)
+            }
+          )
+
+          // 使用条件式的侦听逻辑
+          // 需要异步请求得到的数据
+          const data = ref(null)
+          watch(
+            () => data,
+            () => {
+              // 有值了才执行
+              if(data.value) {
+                // 数据加载后执行某些操作...如赋值。
+              }
+            }
+          )
+        </pre>
+      </div>
+      <hr />
+      <p>
+        Ask a yes/no question:
+        <input v-model="question" />
+      </p>
+      <p>{{ answer }}</p>
+
+      <hr />
+      <h3>3、 watchEffect使用</h3>
+      <div>
+        watchEffect是vue3新增加的一个方法,它也具备侦听能力。它会立即运行一个函数，同时响应式地追踪其依赖，并在依赖更改时重新执行。<br>
+        也就是说不像watch方法那样要指定侦听的源数据,而是自动跟踪回调的响应式依赖。也就是说回调函数里的代码含有对外部的响应式依赖就会对其进行侦听,如果依赖值发生改变，watchEffect会重新执行。<br>
+        watchEffect只能获取到当前的值，不能获取到之前的久值。<br>
+        watchEffect是非惰性的,在创建后就会立即执行。
+        watchEffect(effect,options) <br>
+        第一个参数--effect就是要运行的副作用函数 。 <br>
+        第二个参数--options是一个可选的选项，可以用来调整副作用的刷新时机或调试副作用的依赖。和watch类似不过没有immediate、和deep选项。<br>
+        返回值也是一个用来停止该副作用的函数。跟watch一样。
+        <pre>
+          const count = ref(0)
+
+          watchEffect(() => console.log(count.value))
+          // -> 输出 0
+
+          count.value++
+          // -> 输出 1
+        </pre>
+      </div>
+      <hr>
+      <button @click="increment">
+        {{ count }}
+        <!-- 无需 .value -->
+      </button>
+      <hr>
+    </div>
+    </script>
+    <script type="module">
+      import { createApp } from "https://unpkg.com/vue@3.3.4/dist/vue.esm-browser.prod.js";
+      import BasicComponent from "./js/basicComponent.js";
+      const app = createApp(BasicComponent);
+      app.mount("#app");
+    </script>
+  </body>
+</html>

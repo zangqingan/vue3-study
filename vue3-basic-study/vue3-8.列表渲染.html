@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://unpkg.com/vue@3.3.4/dist/vue.esm-browser.prod.js"></script>
+    <title>vue3-8.列表渲染</title>
+    <style type="text/css"></style>
+  </head>
+  <body>
+    <div id="app">
+      <h3>1. 概述</h3>
+      <div>
+        v-for指令可以遍历3种遍历对象:数组、对象、整数值。对于前两种来说,最后一个参数都是下标序号,第一个都是值。
+        对象时可传入第二个参数表示对象的属性名。<br />
+        与模板上的v-if指令一样,当想遍历一组元素时可以使用template元素包裹,这个也是比较常用的。
+        比如要遍历10个div,每个div的内容有不一样时,使用template元素包裹div循环遍历就很常见。<br />
+        注意：为了给 Vue
+        一个提示,以便它可以跟踪每个节点的标识,从而重用和重新排序现有的元素,你需要为每个元素对应的块提供一个唯一的
+        key attribute,而且key 绑定的值期望是一个基础类型的值，例如字符串或
+        number 类型。而不要使用对象。
+      </div>
+      <h3>2. 遍历数组</h3>
+      <div>
+        v-for指令也是一种特殊的指令,因为它接收的值必须是使用 item in items
+        形式的特殊语法,其中 items 是源数据的数组,而 item
+        是数组迭代时每一项的别名。<br />
+        此时在 v-for 块中可以完整地访问父作用域内的属性和变量。v-for
+        也支持使用可选的第二个参数表示当前项的位置索引。
+        在vue3现在这个索引必须。<br />
+        对于多层嵌套的 v-for,作用域的工作方式和函数的作用域很类似。每个 v-for
+        作用域都可以访问到父级作用域,里层能访问到外层。<br />
+        也可以使用 of 作为分隔符来替代 in,这更接近 JavaScript 的迭代器语法。
+        <pre>
+          // 定义一个响应式源数组
+          const items = ref([{ message: 'Foo' }, { message: 'Bar' }])
+
+          // 使用 in分隔符遍历数组
+          li v-for="(item, index) in items" :key="index">
+            \{\{ item.message \}\}
+          /li
+
+          // 使用 of 分隔符遍历数组
+          li v-for="(item, index) of items" :key="index">
+            \{\{ item.message \}\}
+          /li
+        </pre>
+      </div>
+      <hr />
+      <li v-for="(item,index) in items">{{ index }} - {{ item.message }}</li>
+      <hr />
+      <h3>3. 遍历对象</h3>
+      <div>
+        也可以使用 v-for 来遍历一个对象的所有属性。遍历的顺序会基于对该对象调用
+        Object.keys() 的返回值来决定。<br />
+        这时可以通过提供第二个参数表示属性名 (例如
+        key),也可以提供第三个参数表示位置索引(index)
+        <pre>
+          // 声明
+          const myObject = reactive({
+            title: 'How to do lists in Vue',
+            author: 'Jane Doe',
+            publishedAt: '2016-04-10'
+          })
+          // 使用
+          ul
+            li v-for="(value, key, index) in myObject"
+              \{\{ value \}\}
+            /li
+          /ul
+        </pre>
+      </div>
+      <hr />
+      <ul>
+        <li v-for="(value, key, index) in myObject">
+          {{ index }}---{{ key }}: {{ value }}
+        </li>
+      </ul>
+      <hr />
+      <h3>4. 遍历整数值</h3>
+      <div>
+        v-for还可以直接接受一个整数值,这时模板基于 1...整数值
+        的取值范围重复多次。
+      </div>
+      <hr />
+      <div v-for="n in 10">{{ n }}</div>
+      <hr />
+    </div>
+    <script type="module">
+      import { createApp } from "https://unpkg.com/vue@3.3.4/dist/vue.esm-browser.prod.js";
+      import BasicComponent from "./js/basicComponent.js";
+      const app = createApp(BasicComponent);
+      app.mount("#app");
+    </script>
+  </body>
+</html>

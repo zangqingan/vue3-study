@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://unpkg.com/vue@3.3.4/dist/vue.esm-browser.prod.js"></script>
+    <title>vue3-5.vue3计算属性</title>
+  </head>
+  <body>
+    <div id="app">
+      <h3>1. 计算属性概述</h3>
+      <div>
+        和vue2一样，声明响应式变量之后就可以在模板中使用。如果在模板中写太多逻辑，会让模板变得臃肿，难以维护。
+        这时就可以使用计算属性来描述依赖于某个响应式状态的复杂逻辑，而且计算属性会自动追踪响应式依赖，依赖改变时会同时更新。
+        这也是计算属性的特点：它会缓存，只有当依赖的响应式状态发生了改变时才同步改变。
+        而且计算属性必须返回一个值：即return something<br />
+        vue2计算属性是在computed选项中定义，而vue3统一使用computed()方法即可返回一个计算属性ref(返回值是ref,在使用时注意解包)。<br />
+        在实际开发中也是很常用的，常见在子组件依赖父组件传递的值上。<br />
+
+        <hr />
+        <p>
+          是否出版过出版过书籍(插值表达式中使用JavaScript表达式)：author.books.length
+          > 0 ? 'Yes' : 'No'
+        </p>
+        <span>{{ author.books.length > 0 ? 'Yes' : 'No' }}</span>
+        <br />
+        <p>
+          是否出版过出版过书籍(插值表达式中使用计算属性)：publishedBooksMessage
+        </p>
+        <span>{{ publishedBooksMessage }}</span>
+        <hr />
+      </div>
+      <h3>2. 只读计算属性</h3>
+      <div>
+        只读计算属性是指：computed() 方法只接收一个 getter
+        函数，不能改变所依赖的响应式状态。<br />
+        默认就是只读的。
+        <pre>
+          const publishedBooksMessage = computed(() => {
+            return author.books.length > 0 ? 'Yes' : 'No'
+          })
+        </pre>
+      </div>
+      <h3>3. 可读写计算属性</h3>
+      <div>
+        可读写计算属性是指：computed() 方法只接收一个对象,这个对象要同时提供
+        getter 和 setter 来创建。
+        这时对计算属性重新赋值就会触发setter进而改变依赖的响应式状态。
+        <pre>
+          const firstName = ref('John')
+          const lastName = ref('Doe')
+          // 可读写计算属性
+          const fullName = computed({
+            // getter
+            get() {
+              return firstName.value + ' ' + lastName.value
+            },
+            // setter
+            set(newValue) {
+              // 注意：我们这里使用的是解构赋值语法
+              [firstName.value, lastName.value] = newValue.split(' ')
+            }
+          })
+        </pre>
+      </div>
+      <h3>4. 最佳实践</h3>
+      <div>
+        1.getter 不应有副作用： 不管是只读还是可读写的计算属性,
+        它们的getter都应该只做计算而不应该有其它任何的副作用。也就是说不能对依赖的响应式变量重新赋值。<br />
+        这是因为计算属性描述的是如何根据其他值派生一个值，因此 getter
+        的职责应该仅为计算和返回该派生的值。<br />
+        2.避免直接修改计算属性值：
+        从计算属性返回的值是派生状态。可以把它看作是一个“临时快照”，每当源状态发生变化时，就会创建一个新的快照。
+        所以更改快照是没有意义的，因此计算属性的返回值应该被视为只读的，并且永远不应该被更改——应该更新它所依赖的源状态以触发新的计算。
+      </div>
+    </div>
+    <script type="module">
+      import { createApp } from "https://unpkg.com/vue@3.3.4/dist/vue.esm-browser.prod.js";
+      import BasicComponent from "./js/basicComponent.js";
+      const app = createApp(BasicComponent);
+      app.mount("#app");
+    </script>
+  </body>
+</html>

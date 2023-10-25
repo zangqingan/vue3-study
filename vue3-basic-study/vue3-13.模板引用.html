@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://unpkg.com/vue@3.3.4/dist/vue.esm-browser.prod.js"></script>
+    <title>vue3-13.模板引用</title>
+  </head>
+  <body>
+    <div id="app">
+      <h3>1、概述</h3>
+      <div>
+        虽然 Vue 的声明性渲染模型为你抽象了大部分对 DOM 的直接操作，但在某些情况下，我们仍然需要直接访问底层 DOM 元素。
+        要实现这一点，我们可以使用特殊的 ref attribute。<br>
+        也就是获取标签元素,以前原生时我们可能是使用document.getElementById等api来实现。而vue3是直接在元素的开始标签中定义 ref="元素对象名"
+        即可。然后为了通过组合式api获得该模板的引用,需要声明一个同名的ref。<br>
+        注意：只可以在组件挂载后才能访问模板引用，也就是onMounted钩子之后。<br>
+        <pre>
+          script setup
+            import { ref, onMounted } from 'vue'
+            
+            // 声明一个 ref 来存放该元素的引用
+            // 必须和模板里的 ref 同名
+            const input = ref(null)
+            
+            onMounted(() => {
+              input.value.focus()
+            })
+            /script>
+            
+            template
+              input ref="input" />
+            /template>
+        </pre>
+        <hr>
+        <div ref="customDiv"></div>
+        <input ref="input" />
+        <hr>
+      </div>
+      <h3>2、组件上的ref</h3>
+      <div>
+        模板引用除了用在元素HTML元素外、也可以被用在一个组件上、这时引用的值就是组件实例本身。
+        这时候就可以通过整个实例访问到组件暴露出来的属性或方法。
+      </div>
+    </div>
+    </script>
+    <script type="module">
+      import { createApp } from "https://unpkg.com/vue@3.3.4/dist/vue.esm-browser.prod.js";
+      import BasicComponent from "./js/basicComponent.js";
+      const app = createApp(BasicComponent);
+      app.mount("#app");
+    </script>
+  </body>
+</html>
