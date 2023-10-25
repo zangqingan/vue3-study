@@ -29,6 +29,16 @@ const router = createRouter({
           name: "SelfDirective",
           component: () => import("@/views/SelfDirective.vue"),
         },
+        {
+          path: "/system/user",
+          name: "User",
+          component: () => import("@/views/system/user/index.vue"),
+        },
+        {
+          path: "/system/role",
+          name: "Role",
+          component: () => import("@/views/system/role/index.vue"),
+        },
       ],
     },
     {
