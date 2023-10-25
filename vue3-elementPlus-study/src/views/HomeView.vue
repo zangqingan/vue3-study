@@ -37,6 +37,20 @@ const handleCollapse = () => {
           <el-icon>5</el-icon>
           <span>lodash工具库使用</span>
         </el-menu-item>
+        <el-sub-menu index="/system">
+          <template #title>
+            <el-icon>6</el-icon>
+            <span>系统管理</span>
+          </template>
+          <el-menu-item index="/system/user">
+            <el-icon>6.1</el-icon>
+            <span>用户管理</span>
+          </el-menu-item>
+          <el-menu-item index="/system/role">
+            <el-icon>6.2</el-icon>
+            <span>角色管理</span>
+          </el-menu-item>
+        </el-sub-menu>
       </el-menu>
       <el-container>
         <el-header>
